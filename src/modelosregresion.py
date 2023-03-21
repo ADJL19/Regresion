@@ -1,6 +1,5 @@
 from sklearn.linear_model import LinearRegression
 
-
 class regresionlineal:
     def __init__(self, fit_intercept= True, n_jobs= None, positive= False):
         self.__fit_intercept = fit_intercept
@@ -21,6 +20,7 @@ class regresionlineal:
         return self.__fit_intercept, self.__n_jobs, self.__positive
 
     def _crearModelo(self):
+
         return LinearRegression(fit_intercept= self.__fit_intercept, n_jobs= self.__n_jobs, positive= self.__positive)
     
 class modelo(regresionlineal):
