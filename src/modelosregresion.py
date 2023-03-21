@@ -1,49 +1,31 @@
 from sklearn.linear_model import LinearRegression
 
-class regresionLineal:
-    def __init__(self):
-        self.__modelo = LinearRegression()
-        self.__fit_intercept = True
-        self.__n_jobs = None
-        self.__positive = False
-        self.__predictores = []
-        self.__etiquetas = []
+class regresionlineal:
+    def __init__(self, fit_intercept= True, n_jobs= None, positive= False, tmodelo= LinearRegression()):
+        self.__fit_intercept = fit_intercept
+        self.__n_jobs = n_jobs
+        self.__positive = positive
         self.__prediccion = []
+        self.__tmodelo = tmodelo
 
-    @property
-    def predictores(self):
-        return self.predictores
-    
-    @predictores.setter
-    def predictores(self, predictores):
-        self.__predictores = predictores
+    def crearModelo(self):
+        self.__modelo = LinearRegression()
 
-    @property
-    def etiquetas(self):
-        return self.etiquetas
-    
-    @etiquetas.setter
-    def etiquetas(self, etiquetas):
-        self.__etiquetas = etiquetas 
+    def entrenarModelo(self, train, t_train):
+        self.crearModelo()
+        self.__modelo = self.__modelo.fit(train, t_train)
 
-    def modelo(self):
-        return self.modelo.fit(self.predictores, self.etiquetas)
-
-    @property
-    def prediccion(self):
-        self.__prediccion = self.predecir()
-        return self.prediccion
-
-    def predecir(self): 
-        self.__modelo = self.modelo()
-        return self.modelo.predict(self.predictores)
+    def predecir(self, test):
+        self.__prediccion = self.__modelo.predict(test)
+        return self.__prediccion
 
 def main():
-    juan = regresionLineal
-    juan.predictores = [[0, 1, 2, 3, 4], [0, 1, 2, 3, 4]]
-    juan.etiquetas = [0, 2, 4, 6, 8]
-    hola = juan.etiquetas
-    print(hola)
+    juan = regresionlineal()
+    predictores = [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4]]
+    etiquetas = [[1], [2], [3], [4], [5]]
+
+    juan.entrenarModelo(predictores, etiquetas)
+    # print(juan.predecir([[2, 2]]))
 
 if __name__ == "__main__":
     main()

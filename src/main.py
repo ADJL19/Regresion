@@ -20,13 +20,13 @@ modelos.append(('KNN', neighbors.KNeighborsRegressor(n_neighbors)))
 path = "C:/Users/adzl/Desktop/AA/Traballo/Datos/Datos/output.csv"
 [etiquetas, predictores] = datos.importacionDatos(path)
 
-CV = 10
-for (nombre, modelo) in modelos:
-    modelo = make_pipeline(preprocessing.StandardScaler(), modelo)
-    scores = cross_validate(modelo, predictores, etiquetas, cv=CV, scoring=scoring)
-    for i, test in enumerate(scoring):
-        print(f"La media de {nombre} para [{errores[i]}] es: {np.mean(scores['test_' + test])}")
-    print("")
+# CV = 10
+# for (nombre, modelo) in modelos:
+#     modelo = make_pipeline(preprocessing.StandardScaler(), modelo)
+#     scores = cross_validate(modelo, predictores, etiquetas, cv=CV, scoring=scoring)
+#     for i, test in enumerate(scoring):
+#         print(f"La media de {nombre} para [{errores[i]}] es: {np.mean(scores['test_' + test])}")
+#     print("")
 
 # plt.style.use('_mpl-gallery')
 # fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
