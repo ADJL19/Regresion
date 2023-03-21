@@ -3,22 +3,30 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import datos
+import metricaserror as error
 
 from sklearn import preprocessing, neighbors
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import cross_validate
 from sklearn.pipeline import make_pipeline
 
+from modelosregresion import modelo
+
 scoring = ['max_error', 'neg_mean_absolute_error', 'neg_root_mean_squared_error', 'neg_median_absolute_error', 'r2']
 errores = ['Error máximo', 'MAE', 'MSE', 'MAE', 'Coeficiente de correlación']
 
-modelos = []
-modelos.append(('LinR', LinearRegression()))
-n_neighbors = 5
-modelos.append(('KNN', neighbors.KNeighborsRegressor(n_neighbors)))
+# modelos = []
+# modelos.append(('LinR', LinearRegression()))
+# n_neighbors = 5
+# modelos.append(('KNN', neighbors.KNeighborsRegressor(n_neighbors)))
 
 path = "C:/Users/adzl/Desktop/AA/Traballo/Datos/Datos/output.csv"
 [etiquetas, predictores] = datos.importacionDatos(path)
+
+miModelo = modelo()
+miModelo.entrenarModelo(predictores, etiquetas)
+y_pred = miModelo.predecir(predictores)
+print(error.MSE(etiquetas, y_pred))
 
 # CV = 10
 # for (nombre, modelo) in modelos:
