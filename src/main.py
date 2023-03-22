@@ -25,9 +25,8 @@ path = "./data/output.csv"
 [etiquetas, predictores] = datos.importacionDatos(path)
 
 miModelo = modelo()
-miModelo.entrenarModelo(predictores, etiquetas)
-y_pred = miModelo.predecir(predictores)
-print(error.MSE(etiquetas, y_pred))
+scores = miModelo.validacionCruzada(predictores, etiquetas, scoring= scoring)
+print(scores)
 
 # CV = 10
 # for (nombre, modelo) in modelos:
