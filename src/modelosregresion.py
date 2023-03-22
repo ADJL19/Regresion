@@ -1,4 +1,5 @@
 from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import cross_validate
 
 class regresionlineal:
     def __init__(self, fit_intercept= True, n_jobs= None, positive= False):
@@ -20,13 +21,14 @@ class regresionlineal:
         return self.__fit_intercept, self.__n_jobs, self.__positive
 
     def _crearModelo(self):
-
         return LinearRegression(fit_intercept= self.__fit_intercept, n_jobs= self.__n_jobs, positive= self.__positive)
     
 class modelo(regresionlineal):
     def __init__(self):
         super().__init__()
         self.__prediccion = []
+        self.__scores = []
+        self.__modelo = []
 
     def entrenarModelo(self, train, t_train):
         self.__modelo = self._crearModelo()
@@ -39,6 +41,11 @@ class modelo(regresionlineal):
     @property
     def prediccion(self):
         return self.__prediccion
+    
+    def validacionCruzada(self, predictores, etiquetas, scoring, CV= 10):
+        self.__modelo = self._crearModelo()
+        self.__scores = cross_validate(self.__modelo, predictores, etiquetas, scoring= scoring, cv= CV)
+        return self.__scores
 
 def main():
     juan = modelo()
