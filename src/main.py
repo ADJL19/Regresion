@@ -13,6 +13,7 @@ import tensorflow as tf
 from keras import layers
 
 from modelosregresion import modelo
+from funciones import crearDF
 
 path = "./data/output.csv"
 [etiquetas, predictores] = datos.importacionDatos(path)
@@ -25,24 +26,18 @@ KNN = modelo(KNeighborsRegressor())
 SVM = modelo(SVR())
 DT = modelo(DecisionTreeRegressor())
 
-modelos = []
-modelos.append(RL)
-# modelos.append(KNN)
-# modelos.append(SVM)
-# modelos.append(DT)
+modelos = {}
+modelos['RL'] = RL
+modelos['KNN'] = KNN
+modelos['SVM'] = SVM
+modelos['DT'] = DT
 
-for nombre, tecnica in zip(["Regresión Lineal", "K vecinos más cercanos", "SVM", "Árbol de decisión"], modelos):
+for nombre, tecnica in modelos.items():
     print(nombre)
     scores = tecnica.validacionCruzada(predictores, etiquetas)
     for test, valor in zip(errores, scoring):
         print(f"El {test} vale {np.mean(scores['test_' + valor])}")
     print("")
 
-MAE = (RL.scores)
-nombre = np.ones((10, 1))
-nModelo = np.arange(1, 11)
-
-datos = np.column_stack((MAE, nombre, nModelo))
-
-df = pd.DataFrame(datos, columns= ['MAE', 'Metodo', 'Iteracion'])
-graficas.boxplot(data= df, x= 'Iteracion', y= 'MAE')
+df = crearDF(modelos, scoring)
+print(df)
