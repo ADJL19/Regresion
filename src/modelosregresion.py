@@ -7,7 +7,7 @@ class modelo():
         self.__prediccion = []
         self.__scores = []
         self.__scoring = ['max_error', 'neg_mean_absolute_error', 'neg_root_mean_squared_error', 'neg_median_absolute_error', 'r2']
-        self.__CV = 10
+        self.__CV = 5
 
     @property
     def hiperparametros(self):
@@ -30,4 +30,8 @@ class modelo():
     
     @property
     def scores(self):
-        return self.__scores['test_neg_mean_absolute_error']
+        return self.__scores
+    
+    @property
+    def CV(self):
+        return self.__CV
