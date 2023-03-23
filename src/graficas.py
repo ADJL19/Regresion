@@ -11,9 +11,9 @@ def boxplot(data, x, y):
     sns.boxplot(x=x, y=y, data=data)
 
     # Tweak the visual presentation
-    # ax.xaxis.grid(True)
-    # ax.set(ylabel="")
-    # sns.despine(trim=True, left=True)
+    ax.xaxis.grid(True)
+    ax.set(ylabel="")
+    sns.despine(trim=True, left=True)
     plt.show()
 
 def main():
