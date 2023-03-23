@@ -1,0 +1,18 @@
+# for (nombre, modelo) in modelos:
+#     modelo = make_pipeline(preprocessing.StandardScaler(), modelo)
+# scores = cross_validate(miModelo, predictores, etiquetas, cv=CV, scoring=scoring)
+#     for i, test in enumerate(scoring):
+#         print(f"La media de {nombre} para [{errores[i]}] es: {np.mean(scores['test_' + test])}")
+#     print("")
+
+# plt.style.use('_mpl-gallery')
+# fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+# ax.plot(predictores.x, predictores.y, etiquetas, 'ro')
+
+# U = np.arange(10, 21, 0.5)
+# V = np.arange(10, 21, 0.5)
+# hola = scores['estimator']
+# hola.predict([U, V])
+
+# ax.plot_surface(U, V, Z)
+# plt.show()
