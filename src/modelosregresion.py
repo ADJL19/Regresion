@@ -1,37 +1,15 @@
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import cross_validate
 
-class regresionlineal:
-    def __init__(self, fit_intercept= True, n_jobs= None, positive= False):
-        self.__fit_intercept = fit_intercept
-        self.__n_jobs = n_jobs
-        self.__positive = positive
-
-    def __fit_intercept(self):
-        return self.__fit_intercept
-    
-    def __n_jobs(self):
-        return self.__n_jobs
-    
-    def __positive(self):
-        return self.__positive
-    
-    @property
-    def hiperparametros(self):
-        return self.__fit_intercept, self.__n_jobs, self.__positive
-
-    def _crearModelo(self):
-        return LinearRegression(fit_intercept= self.__fit_intercept, n_jobs= self.__n_jobs, positive= self.__positive)
-    
-class modelo(regresionlineal):
-    def __init__(self):
-        super().__init__()
+class modelo():
+    def __init__(self, modelo):
         self.__prediccion = []
         self.__scores = []
-        self.__modelo = []
+        self.__modelo = modelo
+        self.__scoring = ['max_error', 'neg_mean_absolute_error', 'neg_root_mean_squared_error', 'neg_median_absolute_error', 'r2']
+        self.__CV = 10
 
     def entrenarModelo(self, train, t_train):
-        self.__modelo = self._crearModelo()
         self.__modelo = self.__modelo.fit(train, t_train)
 
     def predecir(self, test):
@@ -42,18 +20,21 @@ class modelo(regresionlineal):
     def prediccion(self):
         return self.__prediccion
     
-    def validacionCruzada(self, predictores, etiquetas, scoring, CV= 10):
-        self.__modelo = self._crearModelo()
-        self.__scores = cross_validate(self.__modelo, predictores, etiquetas, scoring= scoring, cv= CV)
+    @property
+    def hiperparametros(self):
+        return self.__modelo.get_params(False)
+    
+    def validacionCruzada(self, predictores, etiquetas):
+        self.__scores = cross_validate(self.__modelo, predictores, etiquetas, scoring= self.__scoring, cv= self.__CV)
         return self.__scores
 
 def main():
-    juan = modelo()
+    juan = modelo(LinearRegression())
     predictores = [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4]]
     etiquetas = [[1], [2], [3], [4], [5]]
 
     juan.entrenarModelo(predictores, etiquetas)
-    juan.predecir(predictores)
+    print(juan.predecir(predictores))
     print(juan.hiperparametros)
 
 if __name__ == "__main__":
