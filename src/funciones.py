@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import scipy.stats as stats
 
+from sklearn.preprocessing import StandardScaler
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 
