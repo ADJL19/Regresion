@@ -7,7 +7,7 @@ class modelo():
         self.__prediccion = []
         self.__scores = []
         self.__scoring = ['max_error', 'neg_mean_absolute_error', 'neg_root_mean_squared_error', 'neg_median_absolute_error', 'r2']
-        self.__CV = 5
+        self.__CV = 10
 
     @property
     def hiperparametros(self):
