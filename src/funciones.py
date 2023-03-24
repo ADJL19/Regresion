@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import scipy.stats as stats
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -7,7 +9,7 @@ def importacionDatos(path):
     data = pd.read_csv(path)
 
     etiquetas = data.iloc[:, -1]
-    datos = data.iloc[:, [0, 1]]
+    datos = data.iloc[:, [0, 1]].values
 
     return etiquetas, datos
 
@@ -23,8 +25,6 @@ def crearDF(modelos, metricas):
     error = []
     tecnica = [[i] * list(modelos.values())[0].CV for i in range(len(modelos))]
     iteracion = [i for j in range(len(modelos)) for i in range(list(modelos.values())[0].CV)]
-    print(iteracion)
-
 
     for nombre, modelo in modelos.items():
         for score in metricas.values():  
@@ -54,3 +54,14 @@ def boxplot(data, metrica):
 
 def scatter(data, metrica):
     sns.scatterplot(data=data, x=data.Iteracion, y=metrica, hue=data.Tecnica, style=data.Tecnica)
+
+def contrasteHipotesis(*samples, alpha=0.05):
+    for sample in samples:
+        print(sample)
+
+    [_, pval1] = stats.kruskal()
+    [_, pval2] = stats.f_oneway()
+    if pval1 <= alpha:
+        print('Se rechaza la hipótesis: los modelos son diferentes.')
+
+    else: print('Se acepta la hipótesis: los modelos son iguales.')
