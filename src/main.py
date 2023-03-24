@@ -47,6 +47,8 @@ modelosRL['RL0'] = modelo(LinearRegression())
 modelosRL['RL1'] = modelo(LinearRegression(fit_intercept= True))
 funciones.validacionCruzada(modelosRL, predictores, target, metricas)
 df1 = funciones.crearDF(modelosRL, metricas)
+funciones.variasBoxplot(modelosRL, df1, "MeanAE", "coeficienteCorrelación", "MedianAE")
+funciones.variasScatter(modelosRL, df1, "MeanAE", "RMSE")
 df1.to_excel("./Regresion.xlsx", sheet_name= "Regresion Lineal")
 
 modelosKNN = {}
@@ -58,25 +60,28 @@ modelosKNN['KN4'] = modelo(KNeighborsRegressor(n_neighbors= 2, weights= 'distanc
 modelosKNN['KN5'] = modelo(KNeighborsRegressor(n_neighbors= 10, weights= 'distance'))
 funciones.validacionCruzada(modelosKNN, predictores, target, metricas)
 df1 = funciones.crearDF(modelosKNN, metricas)
+funciones.variasBoxplot(modelosKNN, df1, "MeanAE", "coeficienteCorrelación", "MedianAE")
+funciones.variasScatter(modelosKNN, df1, "MeanAE", "RMSE")
 df1.to_excel("./Regresion.xlsx", sheet_name= "K vecinos más cercanos")
 
-modelosSVM = {}
-modelosSVM['SVM0'] = modelo(SVR())
-modelosSVM['SVM1'] = modelo(SVR(kernel= 'poly'))
-modelosSVM['SVM2'] = modelo(SVR(kernel= 'poly', degree= 7))
-funciones.validacionCruzada(modelosSVM, predictores, target, metricas)
-df1 = funciones.crearDF(modelosSVM, metricas)
-df1.to_excel("./Regresion.xlsx", sheet_name= "Máquina de vectores soporte")
+# modelosSVM = {}
+# modelosSVM['SVM0'] = modelo(SVR())
+# modelosSVM['SVM1'] = modelo(SVR(kernel= 'poly'))
+# modelosSVM['SVM2'] = modelo(SVR(kernel= 'poly', degree= 7))
+# funciones.validacionCruzada(modelosSVM, predictores, target, metricas)
+# df1 = funciones.crearDF(modelosSVM, metricas)
+# df1.to_excel("./Regresion.xlsx", sheet_name= "Máquina de vectores soporte")
 
 modelosDT = {}
-modelosDT['DT0'] = modelos(DecisionTreeRegressor())
-modelosDT['DT1'] = modelos(DecisionTreeRegressor(criterion= 'poison'))
-modelosDT['DT2'] = modelos(DecisionTreeRegressor(criterion= 'absolute_error'))
-modelosDT['DT3'] = modelos(DecisionTreeRegressor(splitter= 'random'))
+modelosDT['DT0'] = modelo(DecisionTreeRegressor())
+modelosDT['DT1'] = modelo(DecisionTreeRegressor(criterion= 'poisson'))
+modelosDT['DT2'] = modelo(DecisionTreeRegressor(criterion= 'absolute_error'))
+modelosDT['DT3'] = modelo(DecisionTreeRegressor(splitter= 'random'))
 funciones.validacionCruzada(modelosDT, predictores, target, metricas)
 df1 = funciones.crearDF(modelosDT, metricas)
+funciones.variasBoxplot(modelosDT, df1, "MeanAE", "coeficienteCorrelación", "MedianAE")
+funciones.variasScatter(modelosDT, df1, "MeanAE", "RMSE")
 df1.to_excel("./Regresion.xlsx", sheet_name= "Árbol de decisión")
-
 
 
 

@@ -27,7 +27,7 @@ def crearNN(n_entradas, metricas, NO= [10], FA= 'relu', LR= 0.01, LF= "mean_squa
     return modelo
 
 #Función encargada de realizar la validación cruzada para la RN.
-def validacionCruzada(predictores, target, metricas= ["mean_squared_error", "mean_absolute_error"], NO= [10], FA= 'relu', LR= 0.01, LF= "mean_squared_error"):
+def validacionCruzada(predictores, target, metricas= {"MeanAE": "mean_absolute_error", "MedianAE":"median_absolute_error", "MSE":"mean_square_error"}, NO= [10], FA= 'relu', LR= 0.01, LF= "mean_absolute_error"):
     #Establecemos el número de grupos y de iteraciones para la validación cruzada.
     K, epochs = 10, 200
     n_entradas = np.shape(predictores)[1]
@@ -36,25 +36,24 @@ def validacionCruzada(predictores, target, metricas= ["mean_squared_error", "mea
     kf = KFold(n_splits= K)
 
     #Creamos un DataFrame con las columnas de las métricas y otro con la técnica y la iteración.
-    df = pd.DataFrame(columns= metricas)
+    df = pd.DataFrame(columns= metricas.keys())
     for i, (train_index, test_index) in enumerate(kf.split(predictores, target)):
         #Dividimos los datos de entrada y salida de la RN, tanto para el entrenamiento como para el test.
         X_train, t_train = predictores[train_index], target[train_index]
         X_test, t_test = predictores[test_index], target[test_index]
 
         #Recargamos el modelo para resetear el valor de los pesos.
-        model = crearNN(n_entradas= n_entradas, metricas= metricas, NO= NO, FA= FA, LR= LR, LF= LF)  
+        model = crearNN(n_entradas= n_entradas, metricas= metricas.values(), NO= NO, FA= FA, LR= LR, LF= LF)  
 
         #Entrenamos el modelo de la red neuronal.
             # history = model.fit(X_train, t_train, validation_data=(X_test, t_test), epochs=epochs, batch_size=40, verbose=0)
         model.fit(X_train, t_train, validation_data=(X_test, t_test), epochs=epochs, batch_size=40, verbose=0)
 
-        #Cargamos en el DataFrame el valor de las métricas seleccionadas, junto a la técnica aplicada y la iteración.
-        # df.loc[i] = [model.evaluate(X_test, t_test, batch_size=None)[1:], 5.0, i]
+        #Cargamos en el DataFrame el valor de las métricas seleccionadas.
         df.loc[i] = model.evaluate(X_test, t_test, batch_size=None)[1:]
 
-    # return results, history
-
+    #Devolvemos un DF con el DF anterior más dos columnas de iteración y técnica
+    df2 = pd.DataFrame([list(range(K)), [5 for i in range(K)], columns= 'Iteracion')
     return df
 
 def main():
