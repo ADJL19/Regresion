@@ -19,19 +19,19 @@ class modelo():
     def predecir(self, test):
         self.__prediccion = self.__modelo.predict(test)
         return self.__prediccion
-    
+
     @property
     def prediccion(self):
         return self.__prediccion
-    
+
     def validacionCruzada(self, predictores, etiquetas):
         self.__scores = cross_validate(self.__modelo, predictores, etiquetas, scoring= self.__scoring, cv= self.__CV)
         return self.__scores
-    
+
     @property
     def scores(self):
         return self.__scores
-    
+
     @property
     def CV(self):
         return self.__CV
