@@ -1,62 +1,84 @@
+#Importación de las librerías empleadas
+from sklearn.preprocessing import StandardScaler
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
-
-from sklearn.preprocessing import StandardScaler
-
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+#Función encargada de importar los datos desde el .csv, separándolos ya 
 def importacionDatos(path):
     data = pd.read_csv(path)
+    
+    data = data.drop(data[data.I == 0].index)
+    target = data.Enerxia
+    predictores = data.loc[:, data.columns== ("VelocidadeDoVentoA10m" or "RefachoA10m" or "Presion" or "DireccionDoVentoA10m" or "DireccionDoRefachoA10m" or "Direccion" or "Velocidade")]
 
-    etiquetas = data.iloc[:, -1]
-    datos = data.iloc[:, [0, 1]].values
+    # target = data.iloc[:, -1]
+    # predictores = data.iloc[:, [0, 1]].values
 
-    return etiquetas, datos
+    return target, predictores
 
-def validacionCruzada(modelos, predictores, etiquetas, metricas):
+#Función que realiza la validación cruzada de los distintos modelos.
+def validacionCruzada(modelos, predictores, target, metricas):
+    #Se recorre el diccionario donde se encuentran los modelos.
     for nombre, tecnica in modelos.items():
-        print(f"Para el modelo {nombre} con parámetros {tecnica.hiperparametros}:")
-        scores = tecnica.validacionCruzada(predictores, etiquetas)
+        print(f"Para el modelo {nombre} con parámetros {tecnica.parametros}:")
+        #Para cada modelo se realiza la validación cruzada
+        scores = tecnica.validacionCruzada(predictores, target)
+        #Se recorre cada una de las métricas evaluadas
         for test, valor in metricas.items():
+            #Indicando el nombre del test y el velor medio de este
             print(f"El {test} vale {np.mean(scores['test_' + valor])}")
         print("")
 
+#Función encargada de crear un DataFrame con los valores de las métricas de los modelos.
+#Este DF posee una columna con cada test, una indicando el modelo para ese test, y una última columna con la iteración.
 def crearDF(modelos, metricas):
-    error = []
-    tecnica = [[i] * list(modelos.values())[0].CV for i in range(len(modelos))]
-    iteracion = [i for j in range(len(modelos)) for i in range(list(modelos.values())[0].CV)]
+    n_test = list(modelos.values())[0].CV
+    n, t, error = 0, 0, []
 
-    for nombre, modelo in modelos.items():
-        for score in metricas.values():  
-            error = np.concatenate((error, modelo.scores['test_'+ score]))
+    nombre = list(metricas.keys())
+    nombre.append('Iteracion')
+    nombre.append('Tecnica')
 
-    error = error.reshape((5, -1), order= 'A').T
-    tecnica = np.reshape(tecnica, (-1, 1))
-    iteracion = np.reshape(iteracion, (-1, 1))
-    datos = np.hstack((error, tecnica, iteracion))
+    print()
+    
+    df = pd.DataFrame(columns= nombre)
 
-    del error
-    del tecnica
+    #Se van concatenando, para cada modelo ->
+    for modelo in modelos.values():
+        #cada una de los iteraciones ->
+        for i in range(n_test):
+            #cada una de las métricas ->
+            for score in metricas.values(): 
+                error = np.concatenate((error, [modelo.scores['test_'+ score][i]]))
+            df.loc[n] = np.concatenate((error, [i], [t]))
+            n += 1
+            error = []
+        t += 1
+    return df
 
-    return pd.DataFrame(datos, columns= ['MeanAE', 'R2', 'MAX_ERROR', 'MSE', 'MedianAE', 'Tecnica', 'Iteracion'])
-
+#Funcion encargada del dibujado de una gráfica de tipo 'boxplot'.
 def boxplot(data, metrica):
     sns.set_theme(style="ticks")
+    _, ax = plt.subplots(figsize=(5, 5))
 
-    _, ax = plt.subplots(figsize=(7, 6))
-
+    #Agrupando las técnicas, dibujará el diagrama de caja en función de la métrica seleccionada.
     sns.boxplot(x=data.Tecnica, y=metrica, data=data)
 
     ax.xaxis.grid(True)
-    ax.set(ylabel="")
+    ax.set(ylabel=metrica)
     sns.despine(trim=True, left=True)
     plt.show()
 
+#Función encargada de dibujar un gráfico de dispersión
 def scatter(data, metrica):
+    #Agrupando por iteracion, dibuja para cada modelo la métrica seleccionada. Le da un estilo y color en función de la técnica.
     sns.scatterplot(data=data, x=data.Iteracion, y=metrica, hue=data.Tecnica, style=data.Tecnica)
+    plt.show()
 
+#Función encargada de evaluar la hipótesis
 def contrasteHipotesis(*samples, alpha=0.05):
     for sample in samples:
         print(sample)

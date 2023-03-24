@@ -1,9 +1,9 @@
+#Importación de las librerías empleadas
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import funciones
 import pandas as pd
 import numpy as np
-
 from sklearn.model_selection import KFold
 
 #Función encargada de la creación de una red neunoral feedforward.
