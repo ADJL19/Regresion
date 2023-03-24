@@ -10,14 +10,17 @@ import seaborn as sns
 def importacionDatos(path):
     data = pd.read_csv(path)
     
-    data = data.drop(data[data.I == 0].index)
-    target = data.Enerxia
-    predictores = data.loc[:, data.columns== ("VelocidadeDoVentoA10m" or "RefachoA10m" or "Presion" or "DireccionDoVentoA10m" or "DireccionDoRefachoA10m" or "Direccion" or "Velocidade")]
-
-    # target = data.iloc[:, -1]
-    # predictores = data.iloc[:, [0, 1]].values
+    data = data[data['I'] > 0]
+    data = pd.concat([data], ignore_index= True)
+    target = data.Enerxia.values
+    predictores = normalizar(data.loc[:, ["VelocidadeDoVentoA10m", "RefachoA10m", "Presion", "Velocidade"]].values)
 
     return target, predictores
+
+def normalizar(data):
+    scaler = StandardScaler()
+    scaler.fit(data)
+    return scaler.transform(data)
 
 #Función que realiza la validación cruzada de los distintos modelos.
 def validacionCruzada(modelos, predictores, target, metricas):
@@ -60,7 +63,7 @@ def crearDF(modelos, metricas):
     return df
 
 #Funcion encargada del dibujado de una gráfica de tipo 'boxplot'.
-def boxplot(data, metrica):
+def boxplot(modelos, data, metrica):
     sns.set_theme(style="ticks")
     _, ax = plt.subplots(figsize=(5, 5))
 
@@ -68,15 +71,30 @@ def boxplot(data, metrica):
     sns.boxplot(x=data.Tecnica, y=metrica, data=data)
 
     ax.xaxis.grid(True)
-    ax.set(ylabel=metrica)
+    ax.set(ylabel= metrica, xlabel=list(modelos.keys()))
     sns.despine(trim=True, left=True)
     plt.show()
 
+def variasBoxplot(modelos, data, *graficas):
+    for i in graficas:
+        boxplot(modelos, data, i)
+
 #Función encargada de dibujar un gráfico de dispersión
-def scatter(data, metrica):
+def scatter(modelos, data, metrica):
     #Agrupando por iteracion, dibuja para cada modelo la métrica seleccionada. Le da un estilo y color en función de la técnica.
+    sns.set_theme()
+    _, ax = plt.subplots(figsize=(5, 5))
+
     sns.scatterplot(data=data, x=data.Iteracion, y=metrica, hue=data.Tecnica, style=data.Tecnica)
+
+    ax.xaxis.grid(True)
+    ax.set(ylabel= metrica, xlabel=list(modelos.keys()))
+    sns.despine(trim=True, left=True)
     plt.show()
+
+def variasScatter(modelos, data, *graficas):
+    for i in graficas:
+        scatter(modelos, data, i)
 
 #Función encargada de evaluar la hipótesis
 def contrasteHipotesis(*samples, alpha=0.05):

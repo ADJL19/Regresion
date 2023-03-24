@@ -27,9 +27,10 @@ def crearNN(n_entradas, metricas, NO= [10], FA= 'relu', LR= 0.01, LF= "mean_squa
     return modelo
 
 #Función encargada de realizar la validación cruzada para la RN.
-def validacionCruzada(predictores, target, metricas):
+def validacionCruzada(predictores, target, metricas= ["mean_squared_error", "mean_absolute_error"], NO= [10], FA= 'relu', LR= 0.01, LF= "mean_squared_error"):
     #Establecemos el número de grupos y de iteraciones para la validación cruzada.
     K, epochs = 10, 200
+    n_entradas = np.shape(predictores)[1]
 
     #Realizamos la subdivisón de los datos en K grupos.
     kf = KFold(n_splits= K)
@@ -42,7 +43,7 @@ def validacionCruzada(predictores, target, metricas):
         X_test, t_test = predictores[test_index], target[test_index]
 
         #Recargamos el modelo para resetear el valor de los pesos.
-        model = crearNN(n_entradas= 2, metricas= metricas)  
+        model = crearNN(n_entradas= n_entradas, metricas= metricas, NO= NO, FA= FA, LR= LR, LF= LF)  
 
         #Entrenamos el modelo de la red neuronal.
             # history = model.fit(X_train, t_train, validation_data=(X_test, t_test), epochs=epochs, batch_size=40, verbose=0)
@@ -58,7 +59,7 @@ def validacionCruzada(predictores, target, metricas):
 
 def main():
     metricas = ["mean_squared_error", "mean_absolute_error"]
-    path = "./data/output.csv"
+    path = "./data/2017-18_meteoYeolica.csv"
     [target, predictores] = funciones.importacionDatos(path)
 
     r = validacionCruzada(predictores, target, metricas)

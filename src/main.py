@@ -21,31 +21,61 @@ metricas = dict(Maxerror="max_error", MeanAE="neg_mean_absolute_error", RMSE="ne
 modelos = {}
 modelos['RL'] = modelo(LinearRegression())
 modelos['KNN'] = modelo(KNeighborsRegressor())
-modelos['SVM'] = modelo(SVR())
+# modelos['SVM'] = modelo(SVR())
 modelos['DT'] = modelo(DecisionTreeRegressor())
 
 #Realizamos la validación cruzada de los modelos.
 funciones.validacionCruzada(modelos, predictores, target, metricas)
-#Creamos un DataFrame con todas las métricas. Este DF se organiza con las métricas en columnas
+#Creamos un DataFrame con todas las métricas. Este DF se organiza con las distintas métricas en columnas, junto a un indicador del modelo
+#y de la iteración
 df1 = funciones.crearDF(modelos, metricas)
-df1.to_excel("./Regresion.xlsx", sheet_name= "validacionCruzada")
-funciones.boxplot(data= df1, metrica= "MeanAE")
-funciones.boxplot(data= df1, metrica= "coeficienteCorrelación")
-funciones.boxplot(data= df1, metrica= "MedianAE")
 
-funciones.scatter(data= df1, metrica= "MeanAE")
-funciones.scatter(data= df1, metrica= "RMSE")
+#Graficamos boxplot de distintas métricas
+funciones.variasBoxplot(modelos, df1, "MeanAE", "coeficienteCorrelación", "MedianAE")
+
+#Graficamos una figura de dispersión para ver la variaión de ciertas métricas en las iteraciones
+funciones.variasScatter(modelos, df1, "MeanAE", "RMSE")
+
+#Escribimos el valor de las métricas en el excel, en la hoja 'validacionCruzada'
+df1.to_excel("./Regresion.xlsx", sheet_name= "Validación cruzada")
+
+#Para estudiar el impacto de los hiperparámetros, se crean modelos con distintas inicializaciones:
+modelosRL = {}
+modelos['RL0'] = modelo(LinearRegression())
+modelos['RL1'] = modelo(LinearRegression(fit_intercept= True))
+funciones.validacionCruzada(modelosRL, predictores, target, metricas)
+df1 = funciones.crearDF(modelosRL, metricas)
+df1.to_excel("./Regresion.xlsx", sheet_name= "Regresion Lineal")
+
+modelosKNN = {}
+modelos['KN0'] = modelo(KNeighborsRegressor())
+modelos['KN1'] = modelo(KNeighborsRegressor(n_neighbors= 2))
+modelos['KN2'] = modelo(KNeighborsRegressor(n_neighbors= 10))
+modelos['KN3'] = modelo(KNeighborsRegressor(weights= 'distance'))
+modelos['KN4'] = modelo(KNeighborsRegressor(n_neighbors= 2, weights= 'distance'))
+modelos['KN5'] = modelo(KNeighborsRegressor(n_neighbors= 10, weights= 'distance'))
+funciones.validacionCruzada(modelosKNN, predictores, target, metricas)
+df1 = funciones.crearDF(modelosKNN, metricas)
+df1.to_excel("./Regresion.xlsx", sheet_name= "K vecinos más cercanos")
+
+modelosSVM = {}
+modelosSVM['SVM0'] = modelo(SVR())
+modelosSVM['SVM1'] = modelo(SVR(kernel= 'poly', kerneldegree= 5))
+modelosSVM['SVM2'] = modelo(SVR(kernel= 'poly', kerneldegree= 7))
+funciones.validacionCruzada(modelosSVM, predictores, target, metricas)
+df1 = funciones.crearDF(modelosSVM, metricas)
+df1.to_excel("./Regresion.xlsx", sheet_name= "Máquina de vectores soporte")
+
+modelosDT = {}
+modelosDT['DT0'] = modelos(DecisionTreeRegressor())
+modelosDT['DT1'] = modelos(DecisionTreeRegressor(criterion= 'poison'))
+modelosDT['DT2'] = modelos(DecisionTreeRegressor(criterion= 'absolute_error'))
+modelosDT['DT3'] = modelos(DecisionTreeRegressor(splitter= 'random'))
+funciones.validacionCruzada(modelosDT, predictores, target, metricas)
+df1 = funciones.crearDF(modelosDT, metricas)
+df1.to_excel("./Regresion.xlsx", sheet_name= "Árbol de decisión")
 
 
-
-# modelos = {}
-# modelos['RL1'] = modelo(LinearRegression(fit_intercept= False))
-# modelos['RL2'] = modelo(LinearRegression(fit_intercept= True))
-# funciones.validacionCruzada(modelos, predictores, etiquetas, metricas)
-# df1 = funciones.crearDF(modelos, metricas)
-
-# funciones.scatter(data= df1, metrica= "MeanAE")
-# funciones.boxplot(data= df1, metrica= "MeanAE")
 
 # hola0 = df1.MeanAE[df1.Tecnica == 0].to_numpy()
 # hola1 = df1.MeanAE[df1.Tecnica == 1].to_numpy()
