@@ -2,7 +2,6 @@
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 import pandas as pd
-import scipy.stats as stats
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -10,9 +9,15 @@ import seaborn as sns
 def importacionDatos(path):
     data = pd.read_csv(path)
     
+    #Eliminamos aquellas filas en las que la intensidad sean 0A
     data = data[data['I'] > 0]
+
+    #Realizamos el reseteo dell DF para obtener sus índices ordenados desde 0 hasta N,
+    #en lugar de desde 0 hasta el máximo original, pero con tan solo N índices.
     data = pd.concat([data], ignore_index= True)
     target = data.Enerxia.values
+
+    #Normalizamos los datos de entrada a los mdelos
     predictores = normalizar(data.loc[:, ["VelocidadeDoVentoA10m", "RefachoA10m", "Presion", "Velocidade"]].values)
 
     return target, predictores
@@ -81,10 +86,10 @@ def variasBoxplot(modelos, data, *graficas):
 
 #Función encargada de dibujar un gráfico de dispersión
 def scatter(modelos, data, metrica):
-    #Agrupando por iteracion, dibuja para cada modelo la métrica seleccionada. Le da un estilo y color en función de la técnica.
     sns.set_theme()
     _, ax = plt.subplots(figsize=(5, 5))
 
+    #Agrupando por iteracion, dibuja para cada modelo la métrica seleccionada. Le da un estilo y color en función de la técnica.
     sns.scatterplot(data=data, x=data.Iteracion, y=metrica, hue=data.Tecnica, style=data.Tecnica)
 
     ax.xaxis.grid(True)
@@ -95,15 +100,3 @@ def scatter(modelos, data, metrica):
 def variasScatter(modelos, data, *graficas):
     for i in graficas:
         scatter(modelos, data, i)
-
-#Función encargada de evaluar la hipótesis
-def contrasteHipotesis(*samples, alpha=0.05):
-    for sample in samples:
-        print(sample)
-
-    [_, pval1] = stats.kruskal()
-    [_, pval2] = stats.f_oneway()
-    if pval1 <= alpha:
-        print('Se rechaza la hipótesis: los modelos son diferentes.')
-
-    else: print('Se acepta la hipótesis: los modelos son iguales.')
