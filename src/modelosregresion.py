@@ -5,11 +5,10 @@ from sklearn.model_selection import cross_validate
 #Clase donde 
 class modelo():
     #Inicialización de la clase. Por defecto, se establece un modelo de regresión lineal.
-    def __init__(self, modelo= LinearRegression(), scoring= ['max_error', 'neg_mean_absolute_error', 'neg_root_mean_squared_error', 'neg_median_absolute_error', 'r2'], CV= 10):
+    def __init__(self, modelo= LinearRegression(), CV= 10):
         self.__modelo = modelo
         self.__prediccion = []
         self.__scores = []
-        self.__scoring = scoring
         self.__CV = CV
 
     #Propiedad para obtener el valor de los parámetros del modelo
@@ -27,8 +26,8 @@ class modelo():
         return self.__prediccion
 
     #Método que realiza la validación cruzada del modelo. Devuelve las métricas pedidas
-    def validacionCruzada(self, predictores, etiquetas):
-        self.__scores = cross_validate(self.__modelo, predictores, etiquetas, scoring= self.__scoring, cv= self.__CV)
+    def validacionCruzada(self, predictores, etiquetas, scoring= ['max_error', 'neg_mean_absolute_error', 'neg_root_mean_squared_error', 'neg_median_absolute_error', 'r2']):
+        self.__scores = cross_validate(self.__modelo, predictores, etiquetas, scoring= scoring, cv= self.__CV)
         return self.__scores
     
     #Propiedad para obtener, en cualquier momento, la última predicción realizada.

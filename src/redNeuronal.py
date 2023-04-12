@@ -27,7 +27,7 @@ def crearNN(n_entradas, metricas, NO= [10], FA= 'relu', LR= 0.01, LF= "mean_squa
     return modelo
 
 #Función encargada de realizar la validación cruzada para la RN.
-def validacionCruzada(predictores, target, metricas= {"MeanAE": "mean_absolute_error", "MedianAE":"median_absolute_error", "MSE":"mean_square_error"}, NO= [10], FA= 'relu', LR= 0.01, LF= "mean_absolute_error"):
+def validacionCruzada(predictores, target, metricas= {"MeanAE": "mean_absolute_error", "MSE":"mean_squared_error"}, NO= [10], FA= 'relu', LR= 0.01, LF= "mean_absolute_error"):
     #Establecemos el número de grupos y de iteraciones para la validación cruzada.
     K, epochs = 10, 200
     n_entradas = np.shape(predictores)[1]
@@ -53,8 +53,8 @@ def validacionCruzada(predictores, target, metricas= {"MeanAE": "mean_absolute_e
         df.loc[i] = model.evaluate(X_test, t_test, batch_size=None)[1:]
 
     #Devolvemos un DF con el DF anterior más dos columnas de iteración y técnica
-    df2 = pd.DataFrame([list(range(K)), [5 for i in range(K)], columns= 'Iteracion')
-    return df
+    df2 = pd.DataFrame([list(range(K)), [5 for i in range(K)]], columns= ['Iteracion', 'Tecnica'])
+    return pd.concat([df, df2])
 
 def main():
     metricas = ["mean_squared_error", "mean_absolute_error"]

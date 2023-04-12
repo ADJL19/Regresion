@@ -1,105 +1,177 @@
 #Importación de las librerías empleadas.
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
+import sklearn.metrics as skm
 from sklearn.linear_model import LinearRegression
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor
 from modelosregresion import modelo
 import scipy.stats as stats
 from statsmodels.stats.multicomp import pairwise_tukeyhsd, MultiComparison
 import funciones
+import redNeuronal
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+
 
 #Establecemos la ruta donde se encuentran los datos y los importamos.
-path = "./data/2017-18_meteoYeolica.csv"
-data = pd.read_csv(path)
+path = "C:/Users/adzl/Desktop/BI/Enerxia/MiniEolica/Datos/2017-18_meteoYeolica.csv"
 
-[target, predictores] = funciones.importacionDatos(path)
+#Importamos los valores de predicores y target, indicando si queremos normalizar los datos o aplicar reducción de dimensionalidad
+[target, predictores] = funciones.importacionDatos(path, normalizar= False, reduccion= PCA(n_components= 5))
+print(predictores)
+p_train, p_test, t_train, t_test= train_test_split(predictores, target, test_size= 0.1, shuffle= False)
 
 #Generamos un diccionario donde se introducen las métricas que se desean evaluar.
-metricas = dict(Maxerror="max_error", MeanAE="neg_mean_absolute_error", RMSE="neg_root_mean_squared_error", MedianAE="neg_median_absolute_error", coeficienteCorrelación="r2")
+metricas = dict(Error_Máximo= "max_error", MSE= "neg_mean_squared_error", MeanAE= "neg_mean_absolute_error", RMSE= "neg_root_mean_squared_error", MedianAE= "neg_median_absolute_error", Coef_Determinación= "r2")
 
-#Generamos un diccionario donde se almacenan los distintos modelos que se van a emplear.
-modelos = {}
-modelos['RL'] = modelo(LinearRegression())
-modelos['KNN'] = modelo(KNeighborsRegressor())
+
+# #Generamos un diccionario donde se almacenan los distintos modelos que se van a emplear.
+# modelos = {}
+# modelos['RL'] = modelo(LinearRegression())
+# modelos['KNN'] = modelo(KNeighborsRegressor())
 # modelos['SVM'] = modelo(SVR())
-modelos['DT'] = modelo(DecisionTreeRegressor())
+# modelos['DT'] = modelo(DecisionTreeRegressor())
 
-#Realizamos la validación cruzada de los modelos.
-funciones.validacionCruzada(modelos, predictores, target, metricas)
-#Creamos un DataFrame con todas las métricas. Este DF se organiza con las distintas métricas en columnas, junto a un indicador del modelo
-#y de la iteración
-df1 = funciones.crearDF(modelos, metricas)
+# #Realizamos la validación cruzada de los modelos.
+# funciones.validacionCruzada(modelos, predictores, target, metricas)
+# #Creamos un DataFrame con todas las métricas. Este DF se organiza con las distintas métricas en columnas, junto a un indicador del modelo
+# #y de la iteración
+# dfM = funciones.crearDF(modelos, metricas)
+# funciones.boxplot(dfM, "RMSE")
 
-#Graficamos boxplot de distintas métricas
-funciones.variasBoxplot(modelos, df1, "MeanAE", "coeficienteCorrelación", "MedianAE")
+# #Realizamos la validación cruzada de la red neuronal.
+# dfR = redNeuronal.validacionCruzada(predictores, target)
+# #Concatenamos los dos DF obtenidos en un único DF.
+# dfM = pd.concat([dfM, dfR])
 
-#Graficamos una figura de dispersión para ver la variaión de ciertas métricas en las iteraciones
-funciones.variasScatter(modelos, df1, "MeanAE", "RMSE")
+# #Graficamos boxplot de distintas métricas
+# funciones.variasBoxplot(modelos, dfM, "MeanAE", "RMSE")
+# #Graficamos una figura de dispersión para ver la variación de ciertas métricas en las iteraciones
+# funciones.variasScatter(modelos, dfM, "MeanAE", "RMSE")
+# #Escribimos el valor de las métricas en el excel, en la hoja 'Validación cruzada'
+# dfM.to_excel("./Regresion.xlsx", sheet_name= "Validación cruzada")
 
-#Escribimos el valor de las métricas en el excel, en la hoja 'validacionCruzada'
-df1.to_excel("./Regresion.xlsx", sheet_name= "Validación cruzada")
 
-# #Para estudiar el impacto de los hiperparámetros, se crean modelos con distintas inicializaciones:
+
 modelosRL = {}
-modelosRL['RL0'] = modelo(LinearRegression())
-modelosRL['RL1'] = modelo(LinearRegression(fit_intercept= True))
-funciones.validacionCruzada(modelosRL, predictores, target, metricas)
-df1 = funciones.crearDF(modelosRL, metricas)
-funciones.variasBoxplot(modelosRL, df1, "MeanAE", "coeficienteCorrelación", "MedianAE")
-funciones.variasScatter(modelosRL, df1, "MeanAE", "RMSE")
-df1.to_excel("./Regresion.xlsx", sheet_name= "Regresion Lineal")
+modelosRL['RL00'] = modelo(LinearRegression())
+# modelosRL['RL01'] = modelo(LinearRegression(fit_intercept= False))
+# modelosRL['RL02'] = modelo(LinearRegression(positive= True))
+# modelosRL['RL03'] = modelo(LinearRegression(fit_intercept= False, positive= True))
 
-modelosKNN = {}
-modelosKNN['KN0'] = modelo(KNeighborsRegressor())
-modelosKNN['KN1'] = modelo(KNeighborsRegressor(n_neighbors= 2))
-modelosKNN['KN2'] = modelo(KNeighborsRegressor(n_neighbors= 10))
-modelosKNN['KN3'] = modelo(KNeighborsRegressor(weights= 'distance'))
-modelosKNN['KN4'] = modelo(KNeighborsRegressor(n_neighbors= 2, weights= 'distance'))
-modelosKNN['KN5'] = modelo(KNeighborsRegressor(n_neighbors= 10, weights= 'distance'))
-funciones.validacionCruzada(modelosKNN, predictores, target, metricas)
-df1 = funciones.crearDF(modelosKNN, metricas)
-funciones.variasBoxplot(modelosKNN, df1, "MeanAE", "coeficienteCorrelación", "MedianAE")
-funciones.variasScatter(modelosKNN, df1, "MeanAE", "RMSE")
-df1.to_excel("./Regresion.xlsx", sheet_name= "K vecinos más cercanos")
+dfM = funciones.validacionCruzada(modelosRL, predictores, target, metricas)
+# funciones.variasBoxplot(dfM, "MSE", "RMSE", "MeanAE", "MedianAE", "Coef_Determinación")
+# dfM.to_excel("./RL.xlsx", sheet_name= "Regresion Lineal")
+
+modelosRL['RL00'].entrenarModelo(p_train, t_train)
+t_pred = modelosRL['RL00'].predecir(p_test)
+display= skm.PredictionErrorDisplay.from_predictions(y_true= t_test, y_pred= t_pred, kind= 'actual_vs_predicted')
+plt.show()
+
+
+
+# modelosKNN = {}
+# modelosKNN['KNN00'] = modelo(KNeighborsRegressor())
+# modelosKNN['KNN01'] = modelo(KNeighborsRegressor(n_neighbors= 2))
+# modelosKNN['KNN04'] = modelo(KNeighborsRegressor(n_neighbors= 30))
+# modelosKNN['KNN05'] = modelo(KNeighborsRegressor(n_neighbors= 50))
+# modelosKNN['KNN10'] = modelo(KNeighborsRegressor(weights= 'distance'))
+# modelosKNN['KNN11'] = modelo(KNeighborsRegressor(n_neighbors= 2, weights= 'distance'))
+# modelosKNN['KNN14'] = modelo(KNeighborsRegressor(n_neighbors= 30, weights= 'distance'))
+# modelosKNN['KNN15'] = modelo(KNeighborsRegressor(n_neighbors= 50, weights= 'distance'))
+# dfM = funciones.validacionCruzada(modelosKNN, predictores, target, metricas)
+# funciones.variasBoxplot(dfM, "MSE", "RMSE", "MeanAE", "MedianAE", "Coef_Determinación")
+# dfM.to_excel("./KNN.xlsx", sheet_name= "K vecinos más cercanos")
+
+# modelosKNN['KNN04'].entrenarModelo(p_train, t_train)
+# t_pred = modelosKNN['KNN04'].predecir(p_test)
+# display= skm.PredictionErrorDisplay.from_predictions(y_true= t_test, y_pred= t_pred, kind= 'actual_vs_predicted')
+# plt.show()
+
+
 
 # modelosSVM = {}
-# modelosSVM['SVM0'] = modelo(SVR())
-# modelosSVM['SVM1'] = modelo(SVR(kernel= 'poly'))
-# modelosSVM['SVM2'] = modelo(SVR(kernel= 'poly', degree= 7))
+# modelosSVM['SVM00'] = modelo(SVR(C= 0.8, tol= 0.01, cache_size= 2000), CV= 20)
+# modelosSVM['SVM01'] = modelo(SVR(C= 0.8, tol= 0.01, kernel= 'linear', cache_size= 2000), CV= 20)
+# modelosSVM['SVM02'] = modelo(SVR(C= 0.8, tol= 0.01, kernel= 'sigmoid', cache_size= 2000), CV= 20)
+# modelosSVM['SVM10'] = modelo(SVR(C= 0.8, tol= 0.01, kernel= 'poly', cache_size= 2000), CV= 20)
+# modelosSVM['SVM11'] = modelo(SVR(C= 0.8, tol= 0.01, kernel= 'poly', degree= 5, cache_size= 2000), CV= 20)
+# modelosSVM['SVM12'] = modelo(SVR(C= 0.8, tol= 0.01, kernel= 'poly', degree= 7, cache_size= 2000), CV= 20)
 # funciones.validacionCruzada(modelosSVM, predictores, target, metricas)
 # df1 = funciones.crearDF(modelosSVM, metricas)
-# df1.to_excel("./Regresion.xlsx", sheet_name= "Máquina de vectores soporte")
-
-modelosDT = {}
-modelosDT['DT0'] = modelo(DecisionTreeRegressor())
-modelosDT['DT1'] = modelo(DecisionTreeRegressor(criterion= 'poisson'))
-modelosDT['DT2'] = modelo(DecisionTreeRegressor(criterion= 'absolute_error'))
-modelosDT['DT3'] = modelo(DecisionTreeRegressor(splitter= 'random'))
-funciones.validacionCruzada(modelosDT, predictores, target, metricas)
-df1 = funciones.crearDF(modelosDT, metricas)
-funciones.variasBoxplot(modelosDT, df1, "MeanAE", "coeficienteCorrelación", "MedianAE")
-funciones.variasScatter(modelosDT, df1, "MeanAE", "RMSE")
-df1.to_excel("./Regresion.xlsx", sheet_name= "Árbol de decisión")
+# df1.to_excel("./SVM.xlsx", sheet_name= "Máquina de vectores soporte")
 
 
 
-#Realizamos la contraste de hipótesis:
-print("")
-alpha = 0.05
+# modelosDT = {}
+# modelosDT['DT00'] = modelo(DecisionTreeRegressor(criterion= 'squared_error'))
+# modelosDT['DT01'] = modelo(DecisionTreeRegressor(criterion= 'squared_error', max_depth= 5))
+# modelosDT['DT02'] = modelo(DecisionTreeRegressor(criterion= 'squared_error', max_depth= 10))
+# modelosDT['DT03'] = modelo(DecisionTreeRegressor(criterion= 'squared_error', max_depth= 12))
+# modelosDT['DT10'] = modelo(DecisionTreeRegressor(criterion= 'absolute_error'))
+# modelosDT['DT11'] = modelo(DecisionTreeRegressor(criterion= 'absolute_error', max_depth= 5))
+# modelosDT['DT12'] = modelo(DecisionTreeRegressor(criterion= 'absolute_error', max_depth= 10))
+# modelosDT['DT13'] = modelo(DecisionTreeRegressor(criterion= 'absolute_error', max_depth= 12))
+# dfM = funciones.validacionCruzada(modelosDT, predictores, target, metricas)
+# funciones.variasBoxplot(dfM, "MSE", "RMSE", "MeanAE", "MedianAE", "Coef_Determinación")
+# dfM.to_excel("./DT.xlsx", sheet_name= "Árbol de decisión")
 
-dRL = modelos['RL'].scores['test_'+ metricas['MeanAE']]
-dKNN = modelos['KNN'].scores['test_'+ metricas['MeanAE']]
-dDT = modelos['DT'].scores['test_'+ metricas['MeanAE']]
+# modelosDT['DT02'].entrenarModelo(p_train, t_train)
+# t_pred = modelosDT['DT02'].predecir(p_test)
+# display= skm.PredictionErrorDisplay.from_predictions(y_true= t_test, y_pred= t_pred, kind= 'actual_vs_predicted')
+# plt.show()
 
-F_statistic, pVal = stats.kruskal(dRL, dKNN, dDT)
-print ('p-valor KrusW:', pVal)
-if pVal <= alpha:
-    print('Rechazamos la hipótesis: los modelos son diferentes\n')
-    stacked_data = df1.MeanAE
-    stacked_model = df1.Tecnica
-    MultiComp = MultiComparison(stacked_data, stacked_model)  
-    print(MultiComp.tukeyhsd(alpha=0.05))
-else:
-    print('Aceptamos la hipótesis: los modelos son iguales')
+
+# modelosRF = {}
+# modelosRF['RF00'] = modelo(RandomForestRegressor(criterion= 'squared_error', n_estimators= 10, n_jobs= -1))
+# modelosRF['RF01'] = modelo(RandomForestRegressor(criterion= 'squared_error', max_depth= 5, n_estimators= 10, n_jobs= -1))
+# modelosRF['RF02'] = modelo(RandomForestRegressor(criterion= 'squared_error', max_depth= 10, n_estimators= 10, n_jobs= -1))
+# modelosRF['RF202'] = modelo(RandomForestRegressor(criterion= 'squared_error', max_depth= 10, n_estimators= 20, n_jobs= -1))
+# modelosRF['RF502'] = modelo(RandomForestRegressor(criterion= 'squared_error', max_depth= 10, n_estimators= 50, n_jobs= -1))
+# modelosRF['RF03'] = modelo(RandomForestRegressor(criterion= 'squared_error', max_depth= 12, n_estimators= 10, n_jobs= -1))
+# modelosRF['RF10'] = modelo(RandomForestRegressor(criterion= 'absolute_error', n_estimators= 10, n_jobs= -1))
+# modelosRF['RF11'] = modelo(RandomForestRegressor(criterion= 'absolute_error', max_depth= 5, n_estimators= 10, n_jobs= -1))
+# modelosRF['RF12'] = modelo(RandomForestRegressor(criterion= 'absolute_error', max_depth= 10, n_estimators= 10, n_jobs= -1))
+# modelosRF['RF212'] = modelo(RandomForestRegressor(criterion= 'absolute_error', max_depth= 10, n_estimators= 20, n_jobs= -1))
+# modelosRF['RF512'] = modelo(RandomForestRegressor(criterion= 'absolute_error', max_depth= 10, n_estimators= 50, n_jobs= -1))
+# modelosRF['RF13'] = modelo(RandomForestRegressor(criterion= 'absolute_error', max_depth= 12, n_estimators= 10, n_jobs= -1))
+
+# dfM = funciones.validacionCruzada(modelosRF, predictores, target, metricas)
+# funciones.variasBoxplot(dfM, "MSE", "RMSE", "MeanAE", "MedianAE", "Coef_Determinación")
+# dfM.to_excel("./RF.xlsx", sheet_name= "Bosque de decisión")
+
+# modelosRF['RF502'].entrenarModelo(p_train, t_train)
+# t_pred = modelosRF['RF502'].predecir(p_test)
+# display= skm.PredictionErrorDisplay.from_predictions(y_true= t_test, y_pred= t_pred, kind= 'actual_vs_predicted')
+# plt.show()
+
+
+
+# dfR1 = redNeuronal.validacionCruzada(predictores, target, NO=[10, 10])
+# dfR2 = redNeuronal.validacionCruzada(predictores, target, NO=[15, 15])
+# dfR3 = redNeuronal.validacionCruzada(predictores, target, NO=[10, 10], FA='sigmoid')
+
+
+
+# #Realizamos el contraste de hipótesis:
+# print("")
+# alpha = 0.05
+
+# dRL = modelos['RL'].scores['test_'+ metricas['MeanAE']]
+# dKNN = modelos['KNN'].scores['test_'+ metricas['MeanAE']]
+# dDT = modelos['DT'].scores['test_'+ metricas['MeanAE']]
+
+# F_statistic, pVal = stats.kruskal(dRL, dKNN, dDT)
+# print ('p-valor KrusW:', pVal)
+# if pVal <= alpha:
+#     print('Rechazamos la hipótesis: los modelos son diferentes\n')
+#     stacked_data = dfM.MeanAE
+#     stacked_model = dfM.Tecnica
+#     MultiComp = MultiComparison(stacked_data, stacked_model)  
+#     print(MultiComp.tukeyhsd(alpha=0.05))
+# else:
+#     print('Aceptamos la hipótesis: los modelos son iguales')
