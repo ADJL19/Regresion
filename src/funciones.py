@@ -12,28 +12,30 @@ def importacionDatos(path, normalizar= True, reduccion= None):
 
     #Eliminamos los datos espurios
     data = data[data['Enerxia'] > 0]
-    data = data[data['I'] > 0]
-    data = data[data['Velocidade'] > 3.5]
+    # data = data[data['I'] > 0]
+    # data = data[data['Velocidade'] > 3.5]
     data = data[data['Velocidade'] < 14]
 
     #Realizamos el reseteo del DF para obtener sus índices ordenados desde 0 hasta N,
     #en lugar de desde 0 hasta el máximo original, pero con tan solo N índices.
     data = pd.concat([data], ignore_index= True)
 
-    #Se aleatorizan los datos.
+    #Se aleatorizan los datos
     data = data.sample(n = len(data))
 
     #Se dividen los datos en target y predictores
     target = data.Enerxia
-    data = data.drop(columns= ['Time', 'Enerxia'])
+    data = data.drop(columns= ['Time', 'Enerxia', 'V', 'I', 'W', 'VAr', 'Wh_e'])
 
-    #En caso de querer aplicar alguna reducción de dimensionalidad:
+    #Se normalizan los datos si así de indica.
     if normalizar: data = normalizacion(data)
+
+    #Se realiza la reducción introducida
     if reduccion!= None:
         reduccion.fit(data) 
         predictores= reduccion.transform(data)
     else:
-        predictores = data.loc[:, ['Velocidade', 'VelocidadeDoVentoA10m', 'DesviacionTipicaDaDireccionDoVentoA10m', 'DesviacionTi_picaDaVelocidadeDoVentoA10m']]
+        predictores = data[:, [0, 17, 3, 4]]
 
     return target, predictores
 

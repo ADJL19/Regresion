@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import sklearn.metrics as skm
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
@@ -14,15 +14,16 @@ from statsmodels.stats.multicomp import pairwise_tukeyhsd, MultiComparison
 import funciones
 import redNeuronal
 import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA, FastICA
 
+pca= PCA(n_components= 10)
+ica= FastICA(n_components= 10)
 
 #Establecemos la ruta donde se encuentran los datos y los importamos.
 path = "C:/Users/adzl/Desktop/BI/Enerxia/MiniEolica/Datos/2017-18_meteoYeolica.csv"
 
 #Importamos los valores de predicores y target, indicando si queremos normalizar los datos o aplicar reducción de dimensionalidad
-[target, predictores] = funciones.importacionDatos(path, normalizar= False, reduccion= PCA(n_components= 5))
-print(predictores)
+[target, predictores] = funciones.importacionDatos(path, normalizar= True, reduccion= ica)
 p_train, p_test, t_train, t_test= train_test_split(predictores, target, test_size= 0.1, shuffle= False)
 
 #Generamos un diccionario donde se introducen las métricas que se desean evaluar.
@@ -65,12 +66,12 @@ modelosRL['RL00'] = modelo(LinearRegression())
 
 dfM = funciones.validacionCruzada(modelosRL, predictores, target, metricas)
 # funciones.variasBoxplot(dfM, "MSE", "RMSE", "MeanAE", "MedianAE", "Coef_Determinación")
-# dfM.to_excel("./RL.xlsx", sheet_name= "Regresion Lineal")
+# dfM.to_excel("./info/metricas/RL.xlsx", sheet_name= "Regresion Lineal")
 
-modelosRL['RL00'].entrenarModelo(p_train, t_train)
-t_pred = modelosRL['RL00'].predecir(p_test)
-display= skm.PredictionErrorDisplay.from_predictions(y_true= t_test, y_pred= t_pred, kind= 'actual_vs_predicted')
-plt.show()
+# modelosRL['RL00'].entrenarModelo(p_train, t_train)
+# t_pred = modelosRL['RL00'].predecir(p_test)
+# display= skm.PredictionErrorDisplay.from_predictions(y_true= t_test, y_pred= t_pred, kind= 'actual_vs_predicted')
+# plt.show()
 
 
 
@@ -85,7 +86,7 @@ plt.show()
 # modelosKNN['KNN15'] = modelo(KNeighborsRegressor(n_neighbors= 50, weights= 'distance'))
 # dfM = funciones.validacionCruzada(modelosKNN, predictores, target, metricas)
 # funciones.variasBoxplot(dfM, "MSE", "RMSE", "MeanAE", "MedianAE", "Coef_Determinación")
-# dfM.to_excel("./KNN.xlsx", sheet_name= "K vecinos más cercanos")
+#dfM.to_excel("./info/metricas/KNN.xlsx", sheet_name= "K vecinos más cercanos")
 
 # modelosKNN['KNN04'].entrenarModelo(p_train, t_train)
 # t_pred = modelosKNN['KNN04'].predecir(p_test)
@@ -103,7 +104,7 @@ plt.show()
 # modelosSVM['SVM12'] = modelo(SVR(C= 0.8, tol= 0.01, kernel= 'poly', degree= 7, cache_size= 2000), CV= 20)
 # funciones.validacionCruzada(modelosSVM, predictores, target, metricas)
 # df1 = funciones.crearDF(modelosSVM, metricas)
-# df1.to_excel("./SVM.xlsx", sheet_name= "Máquina de vectores soporte")
+# dfM.to_excel("./info/metricas/SVM.xlsx", sheet_name= "Máquina de vectores soporte")
 
 
 
@@ -118,12 +119,13 @@ plt.show()
 # modelosDT['DT13'] = modelo(DecisionTreeRegressor(criterion= 'absolute_error', max_depth= 12))
 # dfM = funciones.validacionCruzada(modelosDT, predictores, target, metricas)
 # funciones.variasBoxplot(dfM, "MSE", "RMSE", "MeanAE", "MedianAE", "Coef_Determinación")
-# dfM.to_excel("./DT.xlsx", sheet_name= "Árbol de decisión")
+# dfM.to_excel("./info/metricas/DT.xlsx", sheet_name= "Árbol de decisión")
 
 # modelosDT['DT02'].entrenarModelo(p_train, t_train)
 # t_pred = modelosDT['DT02'].predecir(p_test)
 # display= skm.PredictionErrorDisplay.from_predictions(y_true= t_test, y_pred= t_pred, kind= 'actual_vs_predicted')
 # plt.show()
+
 
 
 # modelosRF = {}
@@ -142,7 +144,7 @@ plt.show()
 
 # dfM = funciones.validacionCruzada(modelosRF, predictores, target, metricas)
 # funciones.variasBoxplot(dfM, "MSE", "RMSE", "MeanAE", "MedianAE", "Coef_Determinación")
-# dfM.to_excel("./RF.xlsx", sheet_name= "Bosque de decisión")
+# dfM.to_excel("./info/metricas/RF.xlsx", sheet_name= "Bosque de decisión")
 
 # modelosRF['RF502'].entrenarModelo(p_train, t_train)
 # t_pred = modelosRF['RF502'].predecir(p_test)
