@@ -12,7 +12,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.decomposition import PCA, FastICA
 import scipy.stats as stats
-from statsmodels.stats.multicomp import pairwise_tukeyhsd, MultiComparison
+from statsmodels.stats.multicomp import MultiComparison
 
 from modelosregresion import modelo
 import funciones
@@ -30,7 +30,7 @@ path = "C:/Users/adzl/Desktop/BI/Enerxia/MiniEolica/Datos/2017-18_meteoYeolica.c
 
 p_train, p_test, t_train, t_test= train_test_split(predictores, target, test_size= 0.1, shuffle= False)
 
-# #Generamos un diccionario donde se introducen las métricas que se desean evaluar.
+#Generamos un diccionario donde se introducen las métricas que se desean evaluar.
 metricas = dict(MaxError= "max_error", MSE= "neg_mean_squared_error", MeanAE= "neg_mean_absolute_error", RMSE= "neg_root_mean_squared_error", MedianAE= "neg_median_absolute_error", R2= "r2", varianzaExplicada= "explained_variance")
 test = list(metricas.keys())
 

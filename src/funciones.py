@@ -26,8 +26,6 @@ def importacionDatos(path, normalizar= True, reduccion= None):
 
     #Se dividen los datos en target y predictores
     target = data.Enerxia
-    # target = data.Enerxia.to_numpy()
-    # target = np.reshape(target, (-1, 1))
 
     data = data.drop(columns= ['Time', 'Enerxia', 'V', 'I', 'W', 'VAr', 'Wh_e'])
 
@@ -48,9 +46,9 @@ def importacionDatos(path, normalizar= True, reduccion= None):
 
 def vReduccion(model, data):
     nComp= len(model.components_)
-    mejorExplicacion = [np.abs(model.components_[i]).argmax() for i in range(nComp)]
+    mejorExplicacion = [np.abs(model.components_[comp]).argmax() for comp in range(nComp)]
     variables = data.columns
-    return [variables[mejorExplicacion[i]] for i in range(nComp)]
+    return [variables[mejorExplicacion[comp]] for comp in range(nComp)]
 
 def normalizacion(data):
     scaler = StandardScaler()
@@ -90,13 +88,13 @@ def crearDF(modelos, metricas):
     #Se van concatenando, para cada modelo ->
     for nombre, modelo in modelos.items():
         n_test = modelo.CV
-        #cada una de los iteraciones ->
-        for i in range(n_test):
+        #en cada una de los iteraciones ->
+        for iteracion in range(n_test):
             #cada una de las métricas ->
             for score in metricas.values(): 
-                error = np.concatenate((error, [modelo.scores['test_'+ score][i]]))
-            df1.loc[i] = np.concatenate((error, [i]))
-            df2.loc[i] = nombre
+                error = np.concatenate((error, [modelo.scores['test_'+ score][iteracion]]))
+            df1.loc[iteracion] = np.concatenate((error, [iteracion]))
+            df2.loc[iteracion] = nombre
             error = []
 
     return pd.concat([df1, df2], axis=1, join="inner")
@@ -115,8 +113,8 @@ def boxplot(data, metrica):
     plt.show()
 
 def variasBoxplot(data, *metricas):
-    for i in metricas:
-        boxplot(data, i)
+    for metrica in metricas:
+        boxplot(data, metrica)
 
 #Función encargada de dibujar un gráfico de dispersión
 def scatter(data, metrica):
@@ -132,5 +130,5 @@ def scatter(data, metrica):
     plt.show()
 
 def variasScatter(data, *metricas):
-    for i in metricas:
-        scatter(data, i)
+    for metrica in metricas:
+        scatter(data, metrica)
