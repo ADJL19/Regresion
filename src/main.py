@@ -1,34 +1,38 @@
 #Importación de las librerías empleadas.
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+
 from sklearn.model_selection import train_test_split
 import sklearn.metrics as skm
-from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.linear_model import LinearRegression
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
-from modelosregresion import modelo
+from sklearn.decomposition import PCA, FastICA
 import scipy.stats as stats
 from statsmodels.stats.multicomp import pairwise_tukeyhsd, MultiComparison
+
+from modelosregresion import modelo
 import funciones
 import redNeuronal
-import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA, FastICA
 
-pca= PCA(n_components= 10)
-ica= FastICA(n_components= 10)
+pca= PCA(n_components= 4)
+ica= FastICA(n_components= 4)
 
 #Establecemos la ruta donde se encuentran los datos y los importamos.
 path = "C:/Users/adzl/Desktop/BI/Enerxia/MiniEolica/Datos/2017-18_meteoYeolica.csv"
 
 #Importamos los valores de predicores y target, indicando si queremos normalizar los datos o aplicar reducción de dimensionalidad
 [target, predictores] = funciones.importacionDatos(path, normalizar= True, reduccion= ica)
+# funciones.representarDatos(pd.concat([predictores, target], axis=1, join="inner"))
+
 p_train, p_test, t_train, t_test= train_test_split(predictores, target, test_size= 0.1, shuffle= False)
 
-#Generamos un diccionario donde se introducen las métricas que se desean evaluar.
-metricas = dict(Error_Máximo= "max_error", MSE= "neg_mean_squared_error", MeanAE= "neg_mean_absolute_error", RMSE= "neg_root_mean_squared_error", MedianAE= "neg_median_absolute_error", Coef_Determinación= "r2")
-
+# #Generamos un diccionario donde se introducen las métricas que se desean evaluar.
+metricas = dict(MaxError= "max_error", MSE= "neg_mean_squared_error", MeanAE= "neg_mean_absolute_error", RMSE= "neg_root_mean_squared_error", MedianAE= "neg_median_absolute_error", R2= "r2", varianzaExplicada= "explained_variance")
+test = list(metricas.keys())
 
 # #Generamos un diccionario donde se almacenan los distintos modelos que se van a emplear.
 # modelos = {}
@@ -58,15 +62,15 @@ metricas = dict(Error_Máximo= "max_error", MSE= "neg_mean_squared_error", MeanA
 
 
 
-modelosRL = {}
-modelosRL['RL00'] = modelo(LinearRegression())
+# modelosRL = {}
+# modelosRL['RL00'] = modelo(LinearRegression())
 # modelosRL['RL01'] = modelo(LinearRegression(fit_intercept= False))
 # modelosRL['RL02'] = modelo(LinearRegression(positive= True))
 # modelosRL['RL03'] = modelo(LinearRegression(fit_intercept= False, positive= True))
 
-dfM = funciones.validacionCruzada(modelosRL, predictores, target, metricas)
-# funciones.variasBoxplot(dfM, "MSE", "RMSE", "MeanAE", "MedianAE", "Coef_Determinación")
-# dfM.to_excel("./info/metricas/RL.xlsx", sheet_name= "Regresion Lineal")
+# dfM = funciones.validacionCruzada(modelosRL, predictores, target, metricas)
+# funciones.variasBoxplot(dfM, "MSE", "RMSE", "MeanAE", "MedianAE", "R2")
+# dfM.to_excel("./info/metricas/RLin.xlsx", sheet_name= "Regresion Lineal")
 
 # modelosRL['RL00'].entrenarModelo(p_train, t_train)
 # t_pred = modelosRL['RL00'].predecir(p_test)
@@ -85,7 +89,7 @@ dfM = funciones.validacionCruzada(modelosRL, predictores, target, metricas)
 # modelosKNN['KNN14'] = modelo(KNeighborsRegressor(n_neighbors= 30, weights= 'distance'))
 # modelosKNN['KNN15'] = modelo(KNeighborsRegressor(n_neighbors= 50, weights= 'distance'))
 # dfM = funciones.validacionCruzada(modelosKNN, predictores, target, metricas)
-# funciones.variasBoxplot(dfM, "MSE", "RMSE", "MeanAE", "MedianAE", "Coef_Determinación")
+# funciones.variasBoxplot(dfM, "MSE", "RMSE", "MeanAE", "MedianAE", "R2")
 #dfM.to_excel("./info/metricas/KNN.xlsx", sheet_name= "K vecinos más cercanos")
 
 # modelosKNN['KNN04'].entrenarModelo(p_train, t_train)
@@ -118,7 +122,7 @@ dfM = funciones.validacionCruzada(modelosRL, predictores, target, metricas)
 # modelosDT['DT12'] = modelo(DecisionTreeRegressor(criterion= 'absolute_error', max_depth= 10))
 # modelosDT['DT13'] = modelo(DecisionTreeRegressor(criterion= 'absolute_error', max_depth= 12))
 # dfM = funciones.validacionCruzada(modelosDT, predictores, target, metricas)
-# funciones.variasBoxplot(dfM, "MSE", "RMSE", "MeanAE", "MedianAE", "Coef_Determinación")
+# funciones.variasBoxplot(dfM, "MSE", "RMSE", "MeanAE", "MedianAE", "R2")
 # dfM.to_excel("./info/metricas/DT.xlsx", sheet_name= "Árbol de decisión")
 
 # modelosDT['DT02'].entrenarModelo(p_train, t_train)
@@ -143,7 +147,7 @@ dfM = funciones.validacionCruzada(modelosRL, predictores, target, metricas)
 # modelosRF['RF13'] = modelo(RandomForestRegressor(criterion= 'absolute_error', max_depth= 12, n_estimators= 10, n_jobs= -1))
 
 # dfM = funciones.validacionCruzada(modelosRF, predictores, target, metricas)
-# funciones.variasBoxplot(dfM, "MSE", "RMSE", "MeanAE", "MedianAE", "Coef_Determinación")
+# funciones.variasBoxplot(dfM, "MSE", "RMSE", "MeanAE", "MedianAE", "R2")
 # dfM.to_excel("./info/metricas/RF.xlsx", sheet_name= "Bosque de decisión")
 
 # modelosRF['RF502'].entrenarModelo(p_train, t_train)

@@ -5,6 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
 #Función encargada de importar los datos desde el .csv.
 def importacionDatos(path, normalizar= True, reduccion= None):
     #Leemos el archivo donde se almacenan los datos
@@ -12,9 +13,9 @@ def importacionDatos(path, normalizar= True, reduccion= None):
 
     #Eliminamos los datos espurios
     data = data[data['Enerxia'] > 0]
+    data = data[data['Velocidade'] < 14]
     # data = data[data['I'] > 0]
     # data = data[data['Velocidade'] > 3.5]
-    data = data[data['Velocidade'] < 14]
 
     #Realizamos el reseteo del DF para obtener sus índices ordenados desde 0 hasta N,
     #en lugar de desde 0 hasta el máximo original, pero con tan solo N índices.
@@ -25,24 +26,40 @@ def importacionDatos(path, normalizar= True, reduccion= None):
 
     #Se dividen los datos en target y predictores
     target = data.Enerxia
+    # target = data.Enerxia.to_numpy()
+    # target = np.reshape(target, (-1, 1))
+
     data = data.drop(columns= ['Time', 'Enerxia', 'V', 'I', 'W', 'VAr', 'Wh_e'])
 
     #Se normalizan los datos si así de indica.
-    if normalizar: data = normalizacion(data)
+    if normalizar: 
+        data= pd.DataFrame(normalizacion(data), columns= data.columns)
 
     #Se realiza la reducción introducida
     if reduccion!= None:
-        reduccion.fit(data) 
-        predictores= reduccion.transform(data)
+        predictores= reduccion.fit_transform(data)
+
+        variablesUsadas= vReduccion(reduccion, data)
+        predictores = pd.DataFrame(predictores, columns= variablesUsadas)
     else:
-        predictores = data[:, [0, 17, 3, 4]]
+        predictores = data.loc[:, ['Velocidade', 'VelocidadeDoVentoA10m', 'DesviacionTi_picaDaVelocidadeDoVentoA10m', 'DesviacionTipicaDaDireccionDoVentoA10m']]
 
     return target, predictores
+
+def vReduccion(model, data):
+    nComp= len(model.components_)
+    mejorExplicacion = [np.abs(model.components_[i]).argmax() for i in range(nComp)]
+    variables = data.columns
+    return [variables[mejorExplicacion[i]] for i in range(nComp)]
 
 def normalizacion(data):
     scaler = StandardScaler()
     scaler.fit(data)
     return scaler.transform(data)
+
+def representarDatos(data):
+    sns.pairplot(data)
+    plt.show()
 
 #Función que realiza la validación cruzada de los distintos modelos.
 def validacionCruzada(modelos, predictores, target, metricas):
@@ -50,11 +67,12 @@ def validacionCruzada(modelos, predictores, target, metricas):
     for nombre, tecnica in modelos.items():
         print(f"Para el modelo {nombre} con parámetros {tecnica.parametros}:")
         #Para cada modelo se realiza la validación cruzada
-        scores = tecnica.validacionCruzada(predictores, target, list(metricas.values()))
+        tecnica.validacionCruzada(predictores, target, list(metricas.values()))
+
         #Se recorre cada una de las métricas evaluadas
         for test, valor in metricas.items():
             # Indicando el nombre del test y el valor medio de este
-            print(f"El {test} vale {np.mean(scores['test_' + valor])}")
+            print(f"El {test} vale {np.mean(tecnica.scores['test_' + valor])}")
         print("")
 
     return crearDF(modelos, metricas)
@@ -62,7 +80,7 @@ def validacionCruzada(modelos, predictores, target, metricas):
 #Función encargada de crear un DataFrame con los valores de las métricas de los modelos.
 #Este DF posee una columna con cada test, una indicando el modelo para ese test, y una última columna con la iteración.
 def crearDF(modelos, metricas):
-    n, error = 0, []
+    error = []
 
     columnas = list(metricas.keys())
     columnas.append('Iteracion')  
@@ -77,9 +95,8 @@ def crearDF(modelos, metricas):
             #cada una de las métricas ->
             for score in metricas.values(): 
                 error = np.concatenate((error, [modelo.scores['test_'+ score][i]]))
-            df1.loc[n] = np.concatenate((error, [i]))
-            df2.loc[n] = nombre
-            n += 1
+            df1.loc[i] = np.concatenate((error, [i]))
+            df2.loc[i] = nombre
             error = []
 
     return pd.concat([df1, df2], axis=1, join="inner")

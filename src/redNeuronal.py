@@ -1,10 +1,11 @@
 #Importación de las librerías empleadas
+from sklearn.model_selection import KFold
 import tensorflow as tf
-import matplotlib.pyplot as plt
-import funciones
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import KFold
+import funciones
+import metricaserror as error
+
 
 #Función encargada de la creación de una red neunoral feedforward.
 def crearNN(n_entradas, metricas, NO= [10], FA= 'relu', LR= 0.01, LF= "mean_squared_error"):
@@ -27,7 +28,7 @@ def crearNN(n_entradas, metricas, NO= [10], FA= 'relu', LR= 0.01, LF= "mean_squa
     return modelo
 
 #Función encargada de realizar la validación cruzada para la RN.
-def validacionCruzada(predictores, target, metricas= {"MeanAE": "mean_absolute_error", "MSE":"mean_squared_error"}, NO= [10], FA= 'relu', LR= 0.01, LF= "mean_absolute_error"):
+def validacionCruzada(nombre, predictores, target, metricas= ["MeanAE", "MSE"], NO= [10], FA= 'relu', LR= 0.01, LF= "mse"):
     #Establecemos el número de grupos y de iteraciones para la validación cruzada.
     K, epochs = 10, 200
     n_entradas = np.shape(predictores)[1]
@@ -46,22 +47,26 @@ def validacionCruzada(predictores, target, metricas= {"MeanAE": "mean_absolute_e
         model = crearNN(n_entradas= n_entradas, metricas= metricas.values(), NO= NO, FA= FA, LR= LR, LF= LF)  
 
         #Entrenamos el modelo de la red neuronal.
-            # history = model.fit(X_train, t_train, validation_data=(X_test, t_test), epochs=epochs, batch_size=40, verbose=0)
-        model.fit(X_train, t_train, validation_data=(X_test, t_test), epochs=epochs, batch_size=40, verbose=0)
+        model.fit(X_train, t_train, epochs=epochs, batch_size=40, verbose=0)
 
+        #Predecimos con el modelo entrenado para el cálculo de las métricas
+        prediccion = model.predict(X_test)
         #Cargamos en el DataFrame el valor de las métricas seleccionadas.
-        df.loc[i] = model.evaluate(X_test, t_test, batch_size=None)[1:]
+        df.loc[i]= error.calculo(metricas, t_test, prediccion)
 
-    #Devolvemos un DF con el DF anterior más dos columnas de iteración y técnica
-    df2 = pd.DataFrame([list(range(K)), [5 for i in range(K)]], columns= ['Iteracion', 'Tecnica'])
-    return pd.concat([df, df2])
+    #Devolvemos un DF con el DF de las métricas más dos columnas de iteración y técnica
+    iteracion= [[x+1] for x in range(K)]
+    tecnica= [[nombre] for x in range(K)]
+    df2 = pd.DataFrame(np.hstack([iteracion, tecnica]), columns= ['Iteracion', 'Tecnica'])
+    return pd.concat([df, df2], axis= 1, join= "inner")
+
 
 def main():
-    metricas = ["mean_squared_error", "mean_absolute_error"]
-    path = "./data/2017-18_meteoYeolica.csv"
+    metricas = ["MSE", "RMSE", "MeanAE"]
+    path = "C:/Users/adzl/Desktop/BI/Enerxia/MiniEolica/Datos/2017-18_meteoYeolica.csv"
     [target, predictores] = funciones.importacionDatos(path)
 
-    r = validacionCruzada(predictores, target, metricas)
+    r = validacionCruzada("HOLA", predictores, target, metricas)
     print(r)
 
 if __name__ == "__main__":
