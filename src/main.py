@@ -18,6 +18,10 @@ from modelosregresion import modelo
 import funciones
 import redNeuronal
 
+from timeit import timeit
+
+
+
 pca= PCA(n_components= 4)
 ica= FastICA(n_components= 4)
 

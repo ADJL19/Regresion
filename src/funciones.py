@@ -33,7 +33,7 @@ def importacionDatos(path, normalizar= True, reduccion= None):
     if normalizar: 
         data= pd.DataFrame(normalizacion(data), columns= data.columns)
 
-    #Se realiza la reducción introducida
+    #Se realiza la reducción introducida:
     if reduccion!= None:
         predictores= reduccion.fit_transform(data)
 
