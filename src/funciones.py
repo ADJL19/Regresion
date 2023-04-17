@@ -12,8 +12,9 @@ def importacionDatos(path, normalizar= True, reduccion= None):
     data = pd.read_csv(path)
 
     #Eliminamos los datos espurios
-    data = data[data['Enerxia'] > 0]
-    data = data[data['Velocidade'] < 14]
+    # data = data[data['Enerxia'] > 0]
+    # data = data[data['Enerxia'] < 1500]
+    # data = data[data['Velocidade'] < 14]
     # data = data[data['I'] > 0]
     # data = data[data['Velocidade'] > 3.5]
 

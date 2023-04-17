@@ -18,9 +18,6 @@ from modelosregresion import modelo
 import funciones
 import redNeuronal
 
-from timeit import timeit
-
-
 
 pca= PCA(n_components= 4)
 ica= FastICA(n_components= 4)
@@ -29,7 +26,7 @@ ica= FastICA(n_components= 4)
 path = "C:/Users/adzl/Desktop/BI/Enerxia/MiniEolica/Datos/2017-18_meteoYeolica.csv"
 
 #Importamos los valores de predicores y target, indicando si queremos normalizar los datos o aplicar reducción de dimensionalidad
-[target, predictores] = funciones.importacionDatos(path, normalizar= True, reduccion= ica)
+[target, predictores] = funciones.importacionDatos(path, normalizar= True, reduccion= None)
 # funciones.representarDatos(pd.concat([predictores, target], axis=1, join="inner"))
 
 p_train, p_test, t_train, t_test= train_test_split(predictores, target, test_size= 0.1, shuffle= False)
@@ -38,18 +35,19 @@ p_train, p_test, t_train, t_test= train_test_split(predictores, target, test_siz
 metricas = dict(MaxError= "max_error", MSE= "neg_mean_squared_error", MeanAE= "neg_mean_absolute_error", RMSE= "neg_root_mean_squared_error", MedianAE= "neg_median_absolute_error", R2= "r2", varianzaExplicada= "explained_variance")
 test = list(metricas.keys())
 
-# #Generamos un diccionario donde se almacenan los distintos modelos que se van a emplear.
+#Generamos un diccionario donde se almacenan los distintos modelos que se van a emplear.
 # modelos = {}
 # modelos['RL'] = modelo(LinearRegression())
-# modelos['KNN'] = modelo(KNeighborsRegressor())
+# modelos['KNN'] = modelo(KNeighborsRegressor(n_neighbors= 30))
+# modelos['DT'] = modelo(DecisionTreeRegressor(criterion= 'squared_error', max_depth= 10))
+# modelos['RF'] = modelo(RandomForestRegressor(criterion= 'squared_error', max_depth= 10, n_estimators= 50, n_jobs= -1))
 # modelos['SVM'] = modelo(SVR())
-# modelos['DT'] = modelo(DecisionTreeRegressor())
 
-# #Realizamos la validación cruzada de los modelos.
-# funciones.validacionCruzada(modelos, predictores, target, metricas)
-# #Creamos un DataFrame con todas las métricas. Este DF se organiza con las distintas métricas en columnas, junto a un indicador del modelo
-# #y de la iteración
-# dfM = funciones.crearDF(modelos, metricas)
+
+#Realizamos la validación cruzada de los modelos.
+# dfM= funciones.validacionCruzada(modelos, predictores, target, metricas)
+#Creamos un DataFrame con todas las métricas. Este DF se organiza con las distintas métricas en columnas, junto a un indicador del modelo
+#y de la iteración
 # funciones.boxplot(dfM, "RMSE")
 
 # #Realizamos la validación cruzada de la red neuronal.
@@ -74,7 +72,7 @@ test = list(metricas.keys())
 
 # dfM = funciones.validacionCruzada(modelosRL, predictores, target, metricas)
 # funciones.variasBoxplot(dfM, "MSE", "RMSE", "MeanAE", "MedianAE", "R2")
-# dfM.to_excel("./info/metricas/RLin.xlsx", sheet_name= "Regresion Lineal")
+# dfM.to_excel("./info/metricas/RL.xlsx", sheet_name= "Regresion Lineal")
 
 # modelosRL['RL00'].entrenarModelo(p_train, t_train)
 # t_pred = modelosRL['RL00'].predecir(p_test)
@@ -94,7 +92,7 @@ test = list(metricas.keys())
 # modelosKNN['KNN15'] = modelo(KNeighborsRegressor(n_neighbors= 50, weights= 'distance'))
 # dfM = funciones.validacionCruzada(modelosKNN, predictores, target, metricas)
 # funciones.variasBoxplot(dfM, "MSE", "RMSE", "MeanAE", "MedianAE", "R2")
-#dfM.to_excel("./info/metricas/KNN.xlsx", sheet_name= "K vecinos más cercanos")
+# dfM.to_excel("./info/metricas/KNN.xlsx", sheet_name= "K vecinos más cercanos")
 
 # modelosKNN['KNN04'].entrenarModelo(p_train, t_train)
 # t_pred = modelosKNN['KNN04'].predecir(p_test)
@@ -104,14 +102,13 @@ test = list(metricas.keys())
 
 
 # modelosSVM = {}
-# modelosSVM['SVM00'] = modelo(SVR(C= 0.8, tol= 0.01, cache_size= 2000), CV= 20)
-# modelosSVM['SVM01'] = modelo(SVR(C= 0.8, tol= 0.01, kernel= 'linear', cache_size= 2000), CV= 20)
-# modelosSVM['SVM02'] = modelo(SVR(C= 0.8, tol= 0.01, kernel= 'sigmoid', cache_size= 2000), CV= 20)
-# modelosSVM['SVM10'] = modelo(SVR(C= 0.8, tol= 0.01, kernel= 'poly', cache_size= 2000), CV= 20)
-# modelosSVM['SVM11'] = modelo(SVR(C= 0.8, tol= 0.01, kernel= 'poly', degree= 5, cache_size= 2000), CV= 20)
-# modelosSVM['SVM12'] = modelo(SVR(C= 0.8, tol= 0.01, kernel= 'poly', degree= 7, cache_size= 2000), CV= 20)
-# funciones.validacionCruzada(modelosSVM, predictores, target, metricas)
-# df1 = funciones.crearDF(modelosSVM, metricas)
+# modelosSVM['SVM00'] = modelo(SVR(cache_size= 3000))
+# modelosSVM['SVM01'] = modelo(SVR(kernel= 'linear', cache_size= 3000))
+# modelosSVM['SVM02'] = modelo(SVR(kernel= 'sigmoid', cache_size= 3000))
+# modelosSVM['SVM10'] = modelo(SVR(kernel= 'poly', cache_size= 3000))
+# modelosSVM['SVM11'] = modelo(SVR(kernel= 'poly', degree= 5, cache_size= 3000))
+# modelosSVM['SVM12'] = modelo(SVR(kernel= 'poly', degree= 7, cache_size= 3000))
+# dfM= funciones.validacionCruzada(modelosSVM, predictores, target, metricas)
 # dfM.to_excel("./info/metricas/SVM.xlsx", sheet_name= "Máquina de vectores soporte")
 
 
