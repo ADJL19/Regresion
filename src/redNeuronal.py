@@ -31,11 +31,11 @@ def crearNN(n_entradas, metricas, NO= [10], FA= 'relu', LR= 0.01, LF= "mean_squa
 def validacionCruzada(nombre, predictores, target, metricas= {"MeanAE": "MeanAE", "MSE": "MSE"}, NO= [10], FA= 'relu', LR= 0.01, LF= "mse"):
     #Establecemos el número de grupos y de iteraciones para la validación cruzada.
     # K, epochs, batch = 10, 50, 50
-    K, epochs, batch = 2, 10, 50
+    CV, epochs, batch = 10, 50, 50
     n_entradas = np.shape(predictores)[1]
 
     #Realizamos la subdivisón de los datos en K grupos.
-    kf = KFold(n_splits= K)
+    kf = KFold(n_splits= CV)
 
     #Creamos un DataFrame con las columnas de las métricas y otro con la técnica y la iteración.
     df = pd.DataFrame(columns= metricas)
@@ -48,7 +48,7 @@ def validacionCruzada(nombre, predictores, target, metricas= {"MeanAE": "MeanAE"
         model = crearNN(n_entradas= n_entradas, metricas= ["mae"], NO= NO, FA= FA, LR= LR, LF= LF)  
 
         #Entrenamos el modelo de la red neuronal.
-        model.fit(X_train, t_train, epochs=epochs, batch_size=batch)
+        model.fit(X_train, t_train, epochs=epochs, batch_size=batch, verbose= 0)
 
         #Predecimos con el modelo entrenado para el cálculo de las métricas
         prediccion = model.predict(X_test)
@@ -57,7 +57,7 @@ def validacionCruzada(nombre, predictores, target, metricas= {"MeanAE": "MeanAE"
         df.loc[i]= error.calculo(metricas, t_test, prediccion)
 
     #Devolvemos un DF con el DF de las métricas más dos columnas de iteración y técnica
-    iteracion= [[x+1] for x in range(K)]
-    tecnica= [[nombre] for x in range(K)]
+    iteracion= [[x+1] for x in range(CV)]
+    tecnica= [[nombre] for x in range(CV)]
     df2 = pd.DataFrame(np.hstack([iteracion, tecnica]), columns= ['Iteracion', 'Tecnica'])
     return pd.concat([df, df2], axis= 1, join= "inner")

@@ -17,7 +17,7 @@ class modelo():
         return self.__modelo.get_params(False)
 
     #Método que realiza el entrenamiento del modelo.
-    def entrenarModelo(self, train, t_train):
+    def entrenar(self, train, t_train):
         self.__modelo = self.__modelo.fit(train, t_train)
 
     #Método que realiza la predicción para el modelo

@@ -28,13 +28,14 @@ def main():
 
     #Importamos los valores de predicores y target, indicando si queremos normalizar los datos o aplicar reducción de dimensionalidad
     [target, predictores] = fnc.importacionDatos(path, normalizar= True, reduccion= None)
-    p_train, p_test, t_train, t_test = train_test_split(predictores, target, test_size=0.16667)
+    # p_train, p_test, t_train, t_test = train_test_split(predictores, target, test_size=0.16667)
 
     # #Podemos representar los datos importados, bien sea para comprobar las variables utilizadas, la relación entre ellas o etc.
     # gph.representarDatos(pd.concat([predictores, target], axis=1, join="inner"))
 
     #Generamos un diccionario donde se introducen las métricas que se desean evaluar.
-    metricas = dict(MaxError= "max_error", MSE= "neg_mean_squared_error", MeanAE= "neg_mean_absolute_error", RMSE= "neg_root_mean_squared_error", MedianAE= "neg_median_absolute_error", R2= "r2", varianzaExplicada= "explained_variance")
+    # metricas = dict(MaxError= "max_error", MSE= "neg_mean_squared_error", MeanAE= "neg_mean_absolute_error", RMSE= "neg_root_mean_squared_error", MedianAE= "neg_median_absolute_error", R2= "r2", varianzaExplicada= "explained_variance")
+    # metricas = ["R2", "MSE", "MeanAE", "MedianAE", "RMSE", "MaxError", "varianzaExplicada", "MAPE", "SMAPE"]
 
     # dfM = pd.read_excel('C:/Users/adzl/Documents/GitHub/MiniEolica/info/metricas/DT - copia.xlsx')
     # dfM = pd.concat([dfM], ignore_index= True)
@@ -52,7 +53,8 @@ def main():
     # #Realizamos la validación cruzada de los modelos.
     # #Creamos un DataFrame con todas las métricas. Este DF se organiza con las distintas métricas en columnas, junto a un indicador del modelo
     # #y de la iteración
-    # dfM= fnc.validacionCruzada(modelos, predictores, target, metricas)
+    # dfM= fnc.predValidacionCruzada(modelos, predictores, target, metricas)
+    # print(dfM)
 
     # #Realizamos la validación cruzada de la red neuronal.
     # dfR = redNeuronal.validacionCruzada(predictores, target)
@@ -160,11 +162,47 @@ def main():
 
     metricas = ["R2", "MSE", "MeanAE", "MedianAE", "RMSE", "MaxError", "varianzaExplicada", "MAPE", "SMAPE"]
     for FA in ["tanh", "sigmoid", "relu"]:
-        for i in range(1, 11):
+        for i in range(1, 16):
+            print(f"MLP con {FA} y {i} neuronas")
             dfR1 = redNeuronal.validacionCruzada(f"{FA.upper()}{i}", predictores, target, metricas, NO=[i], FA= FA)
             nombre = f"./info/metricas/NN/{FA.upper()}/NN{i}.xlsx"
             dfR1.to_excel(nombre)
 
+    print("SVM00")
+    modelosSVM = {}
+    modelosSVM['SVM00'] = modelo(SVR(cache_size= 3000))
+    dfM= fnc.predValidacionCruzada(modelosSVM, predictores, target, metricas)
+    dfM.to_excel("./info/metricas/SVM/SVM00.xslx")
+
+    print("SVM01")
+    modelosSVM = {}
+    modelosSVM['SVM01'] = modelo(SVR(kernel= 'linear', cache_size= 3000))
+    dfM= fnc.predValidacionCruzada(modelosSVM, predictores, target, metricas)
+    dfM.to_excel("./info/metricas/SVM/SVM01.xslx")
+
+    print("SVM02")
+    modelosSVM = {}
+    modelosSVM['SVM02'] = modelo(SVR(kernel= 'sigmoid', cache_size= 3000))
+    dfM= fnc.predValidacionCruzada(modelosSVM, predictores, target, metricas)
+    dfM.to_excel("./info/metricas/SVM/SVM02.xslx")
+
+    print("SVM10")
+    modelosSVM = {}
+    modelosSVM['SVM10'] = modelo(SVR(kernel= 'poly', cache_size= 3000))
+    dfM= fnc.predValidacionCruzada(modelosSVM, predictores, target, metricas)
+    dfM.to_excel("./info/metricas/SVM/SVM10.xslx")
+    
+    print("SVM11")
+    modelosSVM = {}
+    modelosSVM['SVM11'] = modelo(SVR(kernel= 'poly', degree= 5, cache_size= 3000))
+    dfM= fnc.predValidacionCruzada(modelosSVM, predictores, target, metricas)
+    dfM.to_excel("./info/metricas/SVM/SVM11.xslx")
+
+    print("SVM12")
+    modelosSVM = {}
+    modelosSVM['SVM12'] = modelo(SVR(kernel= 'poly', degree= 7, cache_size= 3000))
+    dfM= fnc.predValidacionCruzada(modelosSVM, predictores, target, metricas)
+    dfM.to_excel("./info/metricas/SVM/SVM12.xslx")
 
     # #Realizamos el contraste de hipótesis:
     # print("")
