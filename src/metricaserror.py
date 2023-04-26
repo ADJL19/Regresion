@@ -19,6 +19,7 @@ def MedianAE(target, prediccion):
 
 
 def RMSE(target, prediccion):
+    prediccion = np.reshape(prediccion, -1)
     RMSE = np.power(target - prediccion, 2)
     RMSE = np.sqrt(RMSE)
     return np.sum(RMSE)
@@ -41,6 +42,7 @@ def MAPE(target, prediccion):
 
 
 def SMAPE(target, prediccion):
+    prediccion = np.reshape(prediccion, -1)
     SMAPE = (target - prediccion) / (np.abs(target) + np.abs(prediccion))
     SMAPE = np.sum(SMAPE)
     return np.mean(SMAPE) * 100
@@ -54,7 +56,7 @@ def calculo(metricas, target, prediccion):
     for metrica in metricas:
         valor.append(funciones[metrica](target, prediccion))
 
-    return valor
+    return np.array(valor)
 
 if __name__ == '__main__':
     print(calculo(["SMAPE", "MeanAE", "RMSE"], np.array([5]), np.array([2])))

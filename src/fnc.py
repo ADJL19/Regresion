@@ -2,16 +2,15 @@
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 
+import gph
 
 #Función encargada de importar los datos desde el .csv.
 def importacionDatos(path, normalizar= True, reduccion= None):
     #Leemos el archivo donde se almacenan los datos
     data = pd.read_csv(path)
 
-    #Eliminamos los datos espurios
+    # #Eliminamos los datos espurios
     # data = data[data['Enerxia'] > 0]
     # data = data[data['Enerxia'] < 1500]
     # data = data[data['Velocidade'] < 14]
@@ -26,9 +25,11 @@ def importacionDatos(path, normalizar= True, reduccion= None):
     data = data.sample(n = len(data))
 
     #Se dividen los datos en target y predictores
-    target = data.Enerxia
+    target = data.Energy
 
-    data = data.drop(columns= ['Time', 'Enerxia', 'V', 'I', 'W', 'VAr', 'Wh_e'])
+    data = data.drop(columns= ['Time', 'Energy', 'V', 'I', 'W', 'VAr', 'Wh_e'])
+    
+    # gph.matrizCorrelacion(pd.concat([data, target], axis=1, join="inner"))
 
     #Se normalizan los datos si así de indica.
     if normalizar: 
@@ -41,7 +42,8 @@ def importacionDatos(path, normalizar= True, reduccion= None):
         variablesUsadas= vReduccion(reduccion, data)
         predictores = pd.DataFrame(predictores, columns= variablesUsadas)
     else:
-        predictores = data.loc[:, ['Velocidade', 'VelocidadeDoVentoA10m', 'DesviacionTi_picaDaVelocidadeDoVentoA10m', 'DesviacionTipicaDaDireccionDoVentoA10m']]
+        predictores = data.loc[:, ['Wind_V', 'Wind_V_10m', 'SD_Wind_V_10m', 'SD_Wind_D_10m']]
+        # predictores = data.loc[:, ['Velocidade', 'VelocidadeDoVentoA10m', 'DesviacionTi_picaDaVelocidadeDoVentoA10m', 'DesviacionTipicaDaDireccionDoVentoA10m']]
 
     return target, predictores
 
@@ -56,31 +58,25 @@ def normalizacion(data):
     scaler.fit(data)
     return scaler.transform(data)
 
-def representarDatos(data):
-    sns.pairplot(data)
-    plt.show()
-
 #Función que realiza la validación cruzada de los distintos modelos.
 def validacionCruzada(modelos, predictores, target, metricas):
     #Se recorre el diccionario donde se encuentran los modelos.
     for nombre, tecnica in modelos.items():
-        print(f"Para el modelo {nombre} con parámetros {tecnica.parametros}:")
-        #Para cada modelo se realiza la validación cruzada
-        tecnica.validacionCruzada(predictores, target, list(metricas.values()))
-
-        #Se recorre cada una de las métricas evaluadas
-        for test, valor in metricas.items():
-            # Indicando el nombre del test y el valor medio de este
-            print(f"El {test} vale {np.mean(tecnica.scores['test_' + valor])}")
-        print("")
+        validacionCruzadaSimple(nombre, tecnica, predictores, target, metricas)
 
     return crearDF(modelos, metricas)
+
+def validacionCruzadaSimple(nombre, tecnica, predictores, target, metricas):
+    print(f"Para el modelo {nombre} con parámetros {tecnica.parametros}:")
+    tecnica.validacionCruzada(predictores, target, list(metricas.values()))
+    for test, valor in metricas.items():
+        print(f"El {test} vale {np.mean(tecnica.scores['test_' + valor])}")
+    print("")
 
 #Función encargada de crear un DataFrame con los valores de las métricas de los modelos.
 #Este DF posee una columna con cada test, una indicando el modelo para ese test, y una última columna con la iteración.
 def crearDF(modelos, metricas):
-    error = []
-
+    indice= 0
     columnas = list(metricas.keys())
     columnas.append('Iteracion')  
     df1 = pd.DataFrame(columns= columnas)
@@ -91,45 +87,13 @@ def crearDF(modelos, metricas):
         n_test = modelo.CV
         #en cada una de los iteraciones ->
         for iteracion in range(n_test):
-            #cada una de las métricas ->
-            for score in metricas.values(): 
-                error = np.concatenate((error, [modelo.scores['test_'+ score][iteracion]]))
-            df1.loc[iteracion] = np.concatenate((error, [iteracion]))
-            df2.loc[iteracion] = nombre
             error = []
+            #cada una de las métricas ->
+            for metrica in metricas.values():
+                error = np.concatenate((error, [modelo.scores['test_'+ metrica][iteracion]]))
+            df1.loc[indice] = np.concatenate((error, [iteracion]))
+            df2.loc[indice] = nombre
+
+            indice+= 1
 
     return pd.concat([df1, df2], axis=1, join="inner")
-
-#Funcion encargada del dibujado de una gráfica de tipo 'boxplot'.
-def boxplot(data, metrica):
-    sns.set_theme(style= "ticks")
-    _, ax = plt.subplots(figsize= (10, 5))
-
-    #Agrupando las técnicas, dibujará el diagrama de caja en función de la métrica seleccionada.
-    sns.boxplot(data= data, y= metrica, x= "Tecnica")
-
-    ax.xaxis.grid(True)
-    ax.set(ylabel= metrica)
-    sns.despine(trim= True, left= True)
-    plt.show()
-
-def variasBoxplot(data, *metricas):
-    for metrica in metricas:
-        boxplot(data, metrica)
-
-#Función encargada de dibujar un gráfico de dispersión
-def scatter(data, metrica):
-    sns.set_theme()
-    _, ax = plt.subplots(figsize=(5, 5))
-
-    #Agrupando por iteracion, dibuja para cada modelo la métrica seleccionada. Le da un estilo y color en función de la técnica.
-    sns.scatterplot(data=data, x= "Iteracion", y=metrica, hue="Tecnica", style=data.Tecnica)
-
-    ax.xaxis.grid(True)
-    ax.set(ylabel= metrica)
-    sns.despine(trim=True, left=True)
-    plt.show()
-
-def variasScatter(data, *metricas):
-    for metrica in metricas:
-        scatter(data, metrica)

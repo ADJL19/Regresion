@@ -3,7 +3,7 @@ from sklearn.model_selection import KFold
 import tensorflow as tf
 import pandas as pd
 import numpy as np
-import funciones
+import fnc
 import metricaserror as error
 
 
@@ -28,30 +28,32 @@ def crearNN(n_entradas, metricas, NO= [10], FA= 'relu', LR= 0.01, LF= "mean_squa
     return modelo
 
 #Función encargada de realizar la validación cruzada para la RN.
-def validacionCruzada(nombre, predictores, target, metricas= ["MeanAE", "MSE"], NO= [10], FA= 'relu', LR= 0.01, LF= "mse"):
+def validacionCruzada(nombre, predictores, target, metricas= {"MeanAE": "MeanAE", "MSE": "MSE"}, NO= [10], FA= 'relu', LR= 0.01, LF= "mse"):
     #Establecemos el número de grupos y de iteraciones para la validación cruzada.
-    K, epochs = 10, 200
+    # K, epochs, batch = 10, 50, 50
+    K, epochs, batch = 2, 10, 50
     n_entradas = np.shape(predictores)[1]
 
     #Realizamos la subdivisón de los datos en K grupos.
     kf = KFold(n_splits= K)
 
     #Creamos un DataFrame con las columnas de las métricas y otro con la técnica y la iteración.
-    df = pd.DataFrame(columns= metricas.keys())
+    df = pd.DataFrame(columns= metricas)
     for i, (train_index, test_index) in enumerate(kf.split(predictores, target)):
         #Dividimos los datos de entrada y salida de la RN, tanto para el entrenamiento como para el test.
-        X_train, t_train = predictores[train_index], target[train_index]
-        X_test, t_test = predictores[test_index], target[test_index]
+        X_train, t_train = predictores.iloc[train_index, :], target.iloc[train_index]
+        X_test, t_test = predictores.iloc[test_index, :], target.iloc[test_index]
 
         #Recargamos el modelo para resetear el valor de los pesos.
-        model = crearNN(n_entradas= n_entradas, metricas= metricas.values(), NO= NO, FA= FA, LR= LR, LF= LF)  
+        model = crearNN(n_entradas= n_entradas, metricas= ["mae"], NO= NO, FA= FA, LR= LR, LF= LF)  
 
         #Entrenamos el modelo de la red neuronal.
-        model.fit(X_train, t_train, epochs=epochs, batch_size=40, verbose=0)
+        model.fit(X_train, t_train, epochs=epochs, batch_size=batch)
 
         #Predecimos con el modelo entrenado para el cálculo de las métricas
         prediccion = model.predict(X_test)
         #Cargamos en el DataFrame el valor de las métricas seleccionadas.
+        # df.loc[i]= error.calculo(list(metricas.keys()), t_test, prediccion)
         df.loc[i]= error.calculo(metricas, t_test, prediccion)
 
     #Devolvemos un DF con el DF de las métricas más dos columnas de iteración y técnica
@@ -59,15 +61,3 @@ def validacionCruzada(nombre, predictores, target, metricas= ["MeanAE", "MSE"], 
     tecnica= [[nombre] for x in range(K)]
     df2 = pd.DataFrame(np.hstack([iteracion, tecnica]), columns= ['Iteracion', 'Tecnica'])
     return pd.concat([df, df2], axis= 1, join= "inner")
-
-
-def main():
-    metricas = ["MSE", "RMSE", "MeanAE"]
-    path = "C:/Users/adzl/Desktop/BI/Enerxia/MiniEolica/Datos/2017-18_meteoYeolica.csv"
-    [target, predictores] = funciones.importacionDatos(path)
-
-    r = validacionCruzada("HOLA", predictores, target, metricas)
-    print(r)
-
-if __name__ == "__main__":
-    main()
