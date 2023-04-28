@@ -161,8 +161,8 @@ def main():
     # dfM.to_excel("./info/metricas/SVM.xlsx", sheet_name= "Máquina de vectores soporte")
 
     metricas = ["R2", "MSE", "MeanAE", "MedianAE", "RMSE", "MaxError", "varianzaExplicada", "MAPE", "SMAPE"]
-    for FA in ["tanh", "sigmoid", "relu"]:
-        for i in range(1, 16):
+    for FA in ["relu", "linear"]:
+        for i in range(4, 16):
             print(f"MLP con {FA} y {i} neuronas")
             dfR1 = redNeuronal.validacionCruzada(f"{FA.upper()}{i}", predictores, target, metricas, NO=[i], FA= FA)
             nombre = f"./info/metricas/NN/{FA.upper()}/NN{i}.xlsx"
