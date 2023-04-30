@@ -4,13 +4,36 @@ from sklearn.model_selection import KFold
 import numpy as np
 import pandas as pd
 
+from claseModelos import model
+
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.svm import SVR
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor
+
 import gph
 import metricaserror as error
 
-#Función encargada de importar los datos desde el .csv.
-def importacionDatos(path, normalizar= True, reduccion= None):
+def importacionDatos(config, reduccion= None):
+    """
+    Importa los datos de archivos Excel o CSV.
+
+    Parámetros:
+    ----------
+    config: Archivo JSON donde se establece la ruta del archivo, su extensión y el separador en caso de ser archivos CSV. Además, en este archivo, se establece si se realizará la normalización de los datos o si se aplicará algún método de reducción de dimensionalidad.
+
+    Devuelve:
+    ----------
+    target: Dataframe con las variables a predecir y su valor.
+    predictores: Dataframe con las variables explicativas y su valor.
+    """
+
+    archivo= {'.csv': pd.read_csv, '.xlsx': pd.read_excel}
+    path= config['fichero_datos']['fichero'] + config['fichero_datos']['extension']
+
     #Leemos el archivo donde se almacenan los datos
-    data = pd.read_csv(path)
+    data = archivo[config['fichero_datos']['extension']](path, sep= config['fichero_datos']['separador'])
 
     # #Eliminamos los datos espurios
     # data = data[data['Enerxia'] > 0]
@@ -23,19 +46,19 @@ def importacionDatos(path, normalizar= True, reduccion= None):
     #en lugar de desde 0 hasta el máximo original, pero con tan solo N índices.
     data = pd.concat([data], ignore_index= True)
 
-    #Se aleatorizan los datos
-    data = data.sample(n = len(data))
+    #Se aleatorizan los datos.
+    if config["fichero_datos"]["aleatorizar"]: data = data.sample(n = len(data))
 
     #Se dividen los datos en target y predictores
     target = data.Energy
 
+    #Se eliminan del DF las variables no útiles.
     data = data.drop(columns= ['Time', 'Energy', 'V', 'I', 'W', 'VAr', 'Wh_e'])
     
     # gph.matrizCorrelacion(pd.concat([data, target], axis=1, join="inner"))
 
     #Se normalizan los datos si así de indica.
-    if normalizar: 
-        data= pd.DataFrame(normalizacion(data), columns= data.columns)
+    if config["fichero_datos"]["normalizar"]: data= pd.DataFrame(normalizacion(data), columns= data.columns)
 
     #Se realiza la reducción introducida:
     if reduccion!= None:
@@ -103,6 +126,9 @@ def predValidacionCruzada(modelos, predictores, target, metricas):
 #Función encargada de crear un DataFrame con los valores de las métricas de los modelos.
 #Este DF posee una columna con cada test, una indicando el modelo para ese test, y una última columna con la iteración.
 def crearDF(modelos, metricas):
+    """
+    Crea un DataFrame con los valores de las métricas de los modelos. Este DF posee una columna por cada métrica, más una columna con el nombre del modelo y otra con la iteración.
+    """
     indice= 0
     columnas = list(metricas.keys())
     columnas.append('Iteracion')  

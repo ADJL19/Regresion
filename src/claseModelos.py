@@ -2,8 +2,7 @@
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import cross_validate
 
-#Clase donde 
-class modelo():
+class model():
     #Inicialización de la clase. Por defecto, se establece un modelo de regresión lineal.
     def __init__(self, modelo= LinearRegression(), CV= 10):
         self.__modelo = modelo
