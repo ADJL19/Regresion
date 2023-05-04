@@ -4,15 +4,36 @@ import pandas as pd
 import numpy as np
 
 def matrizCorrelacion(data):
-    MC= np.corrcoef(data.T)
+    """
+    Crear una gráfica de correlación.
+
+    Parámetros:
+    ----------
+    data: DataFrame con las variables sobre las que calcular la matriz de correlación.
+
+    Devuelve:
+    ----------
+    d: DataFrame con la matriz de correlación.
+    """
+    n= np.corrcoef(data.T)
     etiquetas= data.columns
-    sns.heatmap(MC, vmin=-1, vmax=1, linewidths=1, cmap= 'BrBG',
-            xticklabels=etiquetas, yticklabels=etiquetas, annot= True)
+    sns.heatmap(n, vmin=-1, vmax=1, linewidths=1, cmap= 'BrBG',
+                xticklabels=etiquetas, yticklabels=etiquetas, annot= True)
     plt.xticks(rotation= 90)
     plt.show()
 
+    d = pd.DataFrame(n, index= etiquetas, columns= etiquetas)
+    return d
+
 #Función encargada de representar datos en un Scatterplot matricial
 def representarDatos(data):
+    """
+    Representa los datos en un Scatterplot matricial.
+
+    Parámetros:
+    ----------
+    data: DataFrame con las variables a representar.
+    """
     sns.set_theme(style="ticks")
     sns.pairplot(data)
     plt.show()

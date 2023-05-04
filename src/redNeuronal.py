@@ -8,7 +8,7 @@ import metricaserror as error
 
 
 #Función encargada de la creación de una red neunoral feedforward.
-def crearNN(n_entradas, metricas, NO= [10], FA= 'relu', LR= 0.01, LF= "mean_squared_error"):
+def crearNN(n_entradas, NO= [10], FA= 'relu', LR= 0.01, LF= "mean_squared_error"):
     #Creamos la estructura de la RN.
     modelo = tf.keras.models.Sequential()
     #Definimos primero la capa de entrada de la red neuronal.
@@ -24,11 +24,11 @@ def crearNN(n_entradas, metricas, NO= [10], FA= 'relu', LR= 0.01, LF= "mean_squa
     opt = tf.keras.optimizers.Adam(learning_rate= LR)
 
     #Por último, seleccionamos las características del proceso que va a seguir el entrenamiento. Por defecto, se emplea una función de error de MSE.
-    modelo.compile(loss=LF, optimizer=opt, metrics=metricas)
+    modelo.compile(loss=LF, optimizer=opt, metrics=['mse'])
     return modelo
 
 #Función encargada de realizar la validación cruzada para la RN.
-def validacionCruzada(nombre, predictores, target, metricas= {"MeanAE": "MeanAE", "MSE": "MSE"}, NO= [10], FA= 'relu', LR= 0.01, LF= "mse"):
+def validacionCruzada(nombre, predictores, target, metricas= ["RMSE", "MeanAE"], NO= [10], FA= 'relu', LR= 0.01, LF= "mse"):
     #Establecemos el número de grupos y de iteraciones para la validación cruzada.
     # K, epochs, batch = 10, 50, 50
     CV, epochs, batch = 10, 50, 50

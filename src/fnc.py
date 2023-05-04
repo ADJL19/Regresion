@@ -1,31 +1,27 @@
 #Importación de las librerías empleadas
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import KFold
 import numpy as np
 import pandas as pd
 
-from claseModelos import model
-
-from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.svm import SVR
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor
-
 import gph
 import metricaserror as error
+from threading import Thread
 
-def importacionDatos(config, reduccion= None):
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA, FastICA
+from sklearn.model_selection import KFold
+
+def importacionDatos(config):
     """
     Importa los datos de archivos Excel o CSV.
 
     Parámetros:
     ----------
-    config: Archivo JSON donde se establece la ruta del archivo, su extensión y el separador en caso de ser archivos CSV. Además, en este archivo, se establece si se realizará la normalización de los datos o si se aplicará algún método de reducción de dimensionalidad.
+    config: JSON donde se establece la ruta del archivo, su extensión y el separador en caso de ser archivos CSV. Además, en este archivo, se establece si se realizará la normalización de los datos o si se aplicará algún método de reducción de dimensionalidad.
 
     Devuelve:
     ----------
     target: Dataframe con las variables a predecir y su valor.
+
     predictores: Dataframe con las variables explicativas y su valor.
     """
 
@@ -54,21 +50,27 @@ def importacionDatos(config, reduccion= None):
 
     #Se eliminan del DF las variables no útiles.
     data = data.drop(columns= ['Time', 'Energy', 'V', 'I', 'W', 'VAr', 'Wh_e'])
-    
+
     # gph.matrizCorrelacion(pd.concat([data, target], axis=1, join="inner"))
 
     #Se normalizan los datos si así de indica.
-    if config["fichero_datos"]["normalizar"]: data= pd.DataFrame(normalizacion(data), columns= data.columns)
+    if config["fichero_datos"]["normalizar"]: data= pd.DataFrame(StandardScaler().fit_transform(data), columns= data.columns)
 
     #Se realiza la reducción introducida:
-    if reduccion!= None:
+    if config["reduccion"]["PCA"]:
+        reduccion= PCA(n_components= config["PCA"]["n_components"])
+        predictores= reduccion.fit_transform(data)
+
+        variablesUsadas= vReduccion(reduccion, data)
+        predictores = pd.DataFrame(predictores, columns= variablesUsadas)
+    elif config["reduccion"]["ICA"]:
+        reduccion= FastICA(n_components= config["ICA"]["n_components"])
         predictores= reduccion.fit_transform(data)
 
         variablesUsadas= vReduccion(reduccion, data)
         predictores = pd.DataFrame(predictores, columns= variablesUsadas)
     else:
         predictores = data.loc[:, ['Wind_V', 'Wind_V_10m', 'SD_Wind_V_10m', 'SD_Wind_D_10m']]
-        # predictores = data.loc[:, ['Velocidade', 'VelocidadeDoVentoA10m', 'DesviacionTi_picaDaVelocidadeDoVentoA10m', 'DesviacionTipicaDaDireccionDoVentoA10m']]
 
     return target, predictores
 
@@ -78,75 +80,67 @@ def vReduccion(model, data):
     variables = data.columns
     return [variables[mejorExplicacion[comp]] for comp in range(nComp)]
 
-def normalizacion(data):
-    scaler = StandardScaler()
-    scaler.fit(data)
-    return scaler.transform(data)
-
-#Función que realiza la validación cruzada de los distintos modelos.
 def validacionCruzada(modelos, predictores, target, metricas):
-    #Se recorre el diccionario donde se encuentran los modelos.
-    for nombre, tecnica in modelos.items():
-        validacionCruzadaSimple(nombre, tecnica, predictores, target, metricas)
+    """
+    Realiza la validación cruzada de los modelos.
 
-    return crearDF(modelos, metricas)
+    Parámetros:
+    ----------
+    modelos: Diccionario con los modelos sobre los que realizar la validación cruzada.
+    predictores: Array-like numérico con las variables explicativas.
+    target: Array-like numérico con los reultados reales de la predicción.
+    metricas: Array-like de texto con las métricas de error a evaluar.
 
-def validacionCruzadaSimple(nombre, tecnica, predictores, target, metricas):
-    print(f"Para el modelo {nombre} con parámetros {tecnica.parametros}:")
-    tecnica.validacionCruzada(predictores, target, list(metricas.values()))
-    for test, valor in metricas.items():
-        print(f"El {test} vale {np.mean(tecnica.scores['test_' + valor])}")
-    print("")
+    Devuelve:
+    ----------
+    d: Dataframe con el resultado de las métricas.
+    """
 
-def predValidacionCruzada(modelos, predictores, target, metricas):
-    n = 0
     col = metricas.copy()
     col.append('Iteracion')
+    col.append('Tecnica')
+
     df1 = pd.DataFrame(columns= col)
-    df2 = pd.DataFrame(columns= ['Tecnica'])
-
     for nombre, tecnica in modelos.items():
-        kf = KFold(n_splits= tecnica.CV)
-        for i, (train_index, test_index) in enumerate(kf.split(predictores, target)):
-            X_train, t_train = predictores.iloc[train_index, :], target.iloc[train_index]
-            X_test, t_test = predictores.iloc[test_index, :], target.iloc[test_index]
+        df1= validacionCruzadaSimple(nombre, tecnica, predictores, target, metricas, df1)
 
-            tecnica.entrenar(X_train, t_train)
-            prediccion = tecnica.predecir(X_test)
+    df1[col[:-1]]= df1[col[:-1]].astype('float32')
 
-            v = error.calculo(metricas, t_test, prediccion)
-            v = np.append(v, [i])
-            df1.loc[n]= v
-            df2.loc[n]= [nombre]
+    return df1
 
-            n+=1
-    return pd.concat([df1, df2], axis= 1, join= "inner")
+def validacionCruzadaSimple(nombre, tecnica, predictores, target, metricas, df1):
+    kf = KFold(n_splits= tecnica.CV)
+    for i, (train_index, test_index) in enumerate(kf.split(predictores, target)):
+        X_train, t_train = predictores.iloc[train_index, :], target.iloc[train_index]
+        X_test, t_test = predictores.iloc[test_index, :], target.iloc[test_index]
 
+        tecnica.entrenar(X_train, t_train)
+        prediccion = tecnica.predecir(X_test)
 
-#Función encargada de crear un DataFrame con los valores de las métricas de los modelos.
-#Este DF posee una columna con cada test, una indicando el modelo para ese test, y una última columna con la iteración.
-def crearDF(modelos, metricas):
-    """
-    Crea un DataFrame con los valores de las métricas de los modelos. Este DF posee una columna por cada métrica, más una columna con el nombre del modelo y otra con la iteración.
-    """
-    indice= 0
-    columnas = list(metricas.keys())
-    columnas.append('Iteracion')  
-    df1 = pd.DataFrame(columns= columnas)
-    df2 = pd.DataFrame(columns= ['Tecnica'])
+        v = error.calculo(metricas, t_test, prediccion)
+        v= np.append(v, [i])
+        v = pd.DataFrame([np.append(v, [nombre])], columns= df1.columns)
 
-    #Se van concatenando, para cada modelo ->
-    for nombre, modelo in modelos.items():
-        n_test = modelo.CV
-        #en cada una de los iteraciones ->
-        for iteracion in range(n_test):
-            error = []
-            #cada una de las métricas ->
-            for metrica in metricas.values():
-                error = np.concatenate((error, [modelo.scores['test_'+ metrica][iteracion]]))
-            df1.loc[indice] = np.concatenate((error, [iteracion]))
-            df2.loc[indice] = nombre
+        df1= pd.concat([df1, v], axis= 0, join= 'inner', ignore_index= True)
+    return df1
 
-            indice+= 1
+class MiHilo(Thread):
+    def __init__(self, nombre, tecnica, predictores, target, metricas, **kwargs):
+        super().__init__(**kwargs)
+        self.nombre = nombre
+        self.tecnica = tecnica
+        self.predictores = predictores
+        self.target = target
+        self.metricas = metricas
 
-    return pd.concat([df1, df2], axis=1, join="inner")
+    def run(self):
+        validacionCruzadaSimple(self.nombre, self.tecnica, self.predictores, self.target, self.metricas)
+
+def validacionCruzadaMulti(modelos, predictores, target, metricas):
+    hilos = []
+    for nombre, tecnica in modelos.items():
+        hilo = MiHilo(nombre, tecnica, predictores, target, metricas)
+        hilo.start()
+        hilos.append(hilo)
+    for hilo in hilos:
+        hilo.join()
