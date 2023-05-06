@@ -11,8 +11,7 @@ from sklearn.decomposition import PCA, FastICA
 from sklearn.model_selection import KFold
 
 def importacionDatos(config):
-    """
-    Importa los datos de archivos Excel o CSV.
+    """Importa los datos de archivos Excel o CSV.
 
     Parámetros:
     ----------
@@ -43,34 +42,34 @@ def importacionDatos(config):
     data = pd.concat([data], ignore_index= True)
 
     #Se aleatorizan los datos.
-    if config["fichero_datos"]["aleatorizar"]: data = data.sample(n = len(data))
+    if config["preprocesamiento"]["aleatorizar"]: data = data.sample(n = len(data))
 
     #Se dividen los datos en target y predictores
     target = data.Energy
 
     #Se eliminan del DF las variables no útiles.
-    data = data.drop(columns= ['Time', 'Energy', 'V', 'I', 'W', 'VAr', 'Wh_e'])
+    data = data.drop(columns= config["preprocesamiento"]["variablesEspurias"])
 
-    # gph.matrizCorrelacion(pd.concat([data, target], axis=1, join="inner"))
+    if config["representacion"]["MatrizCorrelacion"]: gph.matrizCorrelacion(pd.concat([data, target], axis=1, join="inner"))
 
     #Se normalizan los datos si así de indica.
-    if config["fichero_datos"]["normalizar"]: data= pd.DataFrame(StandardScaler().fit_transform(data), columns= data.columns)
+    if config["preprocesamiento"]["normalizar"]: data= pd.DataFrame(StandardScaler().fit_transform(data), columns= data.columns)
 
     #Se realiza la reducción introducida:
-    if config["reduccion"]["PCA"]:
-        reduccion= PCA(n_components= config["PCA"]["n_components"])
+    if config["preprocesamiento"]["reduccion"]["PCA"]:
+        reduccion= PCA(n_components= config["preprocesamiento"]["PCA"]["n_components"])
         predictores= reduccion.fit_transform(data)
 
         variablesUsadas= vReduccion(reduccion, data)
         predictores = pd.DataFrame(predictores, columns= variablesUsadas)
-    elif config["reduccion"]["ICA"]:
-        reduccion= FastICA(n_components= config["ICA"]["n_components"])
+    elif config["preprocesamiento"]["reduccion"]["ICA"]:
+        reduccion= FastICA(n_components= config["preprocesamiento"]["ICA"]["n_components"])
         predictores= reduccion.fit_transform(data)
 
         variablesUsadas= vReduccion(reduccion, data)
         predictores = pd.DataFrame(predictores, columns= variablesUsadas)
     else:
-        predictores = data.loc[:, ['Wind_V', 'Wind_V_10m', 'SD_Wind_V_10m', 'SD_Wind_D_10m']]
+        predictores = data.loc[:, config["preprocesamiento"]["variablesExplicativas"]]
 
     return target, predictores
 
@@ -80,15 +79,20 @@ def vReduccion(model, data):
     variables = data.columns
     return [variables[mejorExplicacion[comp]] for comp in range(nComp)]
 
-def validacionCruzada(modelos, predictores, target, metricas):
-    """
-    Realiza la validación cruzada de los modelos.
+def crearDF(metricas):
+    col = metricas.copy()
+    col.append('Iteracion')
+    col.append('Tecnica')
+    return pd.DataFrame(columns= col)
+
+def validacionCruzada(modelos, predictores, target, metricas, CV):
+    """Realiza la validación cruzada de los modelos.
 
     Parámetros:
     ----------
     modelos: Diccionario con los modelos sobre los que realizar la validación cruzada.
     predictores: Array-like numérico con las variables explicativas.
-    target: Array-like numérico con los reultados reales de la predicción.
+    target: Array-like numérico con los resultados reales de la predicción.
     metricas: Array-like de texto con las métricas de error a evaluar.
 
     Devuelve:
@@ -96,51 +100,106 @@ def validacionCruzada(modelos, predictores, target, metricas):
     d: Dataframe con el resultado de las métricas.
     """
 
-    col = metricas.copy()
-    col.append('Iteracion')
-    col.append('Tecnica')
-
-    df1 = pd.DataFrame(columns= col)
+    DF = crearDF(metricas)
+    kf = KFold(n_splits= CV)
     for nombre, tecnica in modelos.items():
-        df1= validacionCruzadaSimple(nombre, tecnica, predictores, target, metricas, df1)
+        DF= pd.concat([DF, validacionCruzadaModelo(nombre, tecnica, predictores, target, metricas, kf)], axis=0, join='inner')
+    return DF
 
-    df1[col[:-1]]= df1[col[:-1]].astype('float32')
+def validacionCruzadaModelo(nombre, tecnica, predictores, target, metricas, kf):
+    """Realiza la validación cruzada K-Fold para un modelo.
 
-    return df1
+    Parámetros:
+    ----------
+    nombre : String 
+        Nombre que se le da al modelo.
 
-def validacionCruzadaSimple(nombre, tecnica, predictores, target, metricas, df1):
-    kf = KFold(n_splits= tecnica.CV)
+    tecnica: Objeto 
+        Modelo.
+
+    predictores : Array-like de (n_muestras) o matrix-like de (n_muestras x n_variables) 
+        Valor de la(s) variable(s) explicativa(s).
+
+    target : Array-like de (n_muestras)
+        Valor real de las predicciones.
+
+    metricas : Array-like de (n_metricas)
+        Métricas que se desean calcular.
+
+    Devuelve:
+    ----------
+    d: Dataframe 
+        Valor de las métricas.
+    """
+
+    DF= crearDF(metricas)
     for i, (train_index, test_index) in enumerate(kf.split(predictores, target)):
-        X_train, t_train = predictores.iloc[train_index, :], target.iloc[train_index]
-        X_test, t_test = predictores.iloc[test_index, :], target.iloc[test_index]
+        v= validacionCruzadaKFold(nombre, tecnica, predictores, target, metricas, train_index, test_index, i)
+        DF= pd.concat([DF, v], axis= 0, join= 'inner', ignore_index= True)
+    
+    DF[DF.columns[:-1]]= DF[DF.columns[:-1]].astype('float')
+    return DF
 
-        tecnica.entrenar(X_train, t_train)
-        prediccion = tecnica.predecir(X_test)
+def validacionCruzadaKFold(nombre, tecnica, predictores, target, metricas, train_index, test_index, i):
+    DF= crearDF(metricas)
+    X_train, t_train = predictores.iloc[train_index, :], target.iloc[train_index]
+    X_test, t_test = predictores.iloc[test_index, :], target.iloc[test_index]
+    
+    tecnica.entrenar(X_train, t_train)
+    prediccion = tecnica.predecir(X_test)
 
-        v = error.calculo(metricas, t_test, prediccion)
-        v= np.append(v, [i])
-        v = pd.DataFrame([np.append(v, [nombre])], columns= df1.columns)
-
-        df1= pd.concat([df1, v], axis= 0, join= 'inner', ignore_index= True)
-    return df1
+    v = np.append(error.calculo(metricas, t_test, prediccion), [i])
+    DF.loc[0]= np.append(v, [nombre])
+    return DF
 
 class MiHilo(Thread):
-    def __init__(self, nombre, tecnica, predictores, target, metricas, **kwargs):
+    def __init__(self, nombre, tecnica, predictores, target, metricas, kf, **kwargs):
         super().__init__(**kwargs)
         self.nombre = nombre
         self.tecnica = tecnica
         self.predictores = predictores
         self.target = target
         self.metricas = metricas
+        self.kf = kf
 
     def run(self):
-        validacionCruzadaSimple(self.nombre, self.tecnica, self.predictores, self.target, self.metricas)
+        self.result= validacionCruzadaModelo(self.nombre, self.tecnica, self.predictores, self.target, self.metricas, self.kf)
 
-def validacionCruzadaMulti(modelos, predictores, target, metricas):
+    def result(self):
+        return self.result
+
+def validacionCruzadaMultiModelo(modelos, predictores, target, metricas, CV):
+    """Realiza la validación cruzada multihilo para cada modelo. De esta manera, en cada hilo se realiza toda la validación cruzada de un modelo.
+    """
     hilos = []
+    kf= KFold(n_splits= CV)
+    DF= crearDF(metricas)
+
     for nombre, tecnica in modelos.items():
-        hilo = MiHilo(nombre, tecnica, predictores, target, metricas)
+        hilo = MiHilo(nombre, tecnica, predictores, target, metricas, kf)
         hilo.start()
         hilos.append(hilo)
     for hilo in hilos:
         hilo.join()
+    for hilo in hilos:
+        df = hilo.result
+        DF = pd.concat([DF, df], axis=0, join= 'inner')
+    return DF
+
+# def validacionCruzadaMultiKFold(modelos, predictores, target, metricas, CV):
+#     hilos = []
+#     DF= crearDF(metricas)
+
+#     kf = KFold(n_splits= CV)
+#     for nombre, tecnica in modelos.items():
+#         for i, (train_index, test_index) in enumerate(kf.split(predictores, target)):
+#             hilo = MiHilo(nombre, tecnica, predictores, target, metricas, train_index, test_index, i)
+#             hilo.start()
+#             hilos.append(hilo)
+
+#     for hilo in hilos:
+#         hilo.join()
+
+#     for hilo in hilos:
+#         df = hilo.result
+#         DF = pd.concat([DF, df], axis=0, join= 'inner')

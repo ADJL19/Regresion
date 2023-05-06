@@ -9,20 +9,30 @@ import gph
 import fnc
 from crearModelos import definirModelos
 
+from timeit import timeit
+
 def main():
     #Cargamos el archivo JSON donde se encuentra la configuración deseada.
-    with open("hiperparametros.json", "r") as config_file: config = json.load(config_file)
+    with open("config.json", "r") as config_file: config = json.load(config_file)
 
-    # #Importamos los valores de predicores y target segun la configuración.
+    # #Importamos los valores de predictores y target según la configuración.
     [target, predictores] = fnc.importacionDatos(config)
 
-    # #Podemos representar los datos importados, bien sea para comprobar las variables utilizadas, la relación entre ellas o etc.
-    # gph.representarDatos(pd.concat([predictores, target], axis=1, join="inner"))
+    #Podemos representar los datos importados, bien sea para comprobar las variables utilizadas, la relación entre ellas o etc.
+    if config["representacion"]["ScatterMatrix"]: gph.representarDatos(pd.concat([predictores, target], axis=1, join="inner"))
 
     modelos= definirModelos(config, predictores.shape[1])
-    data= fnc.validacionCruzada(modelos, predictores, target, metricas= config["entrenamiento"]["metrics"])
+    metricas= config['entrenamiento']['metrics']
+    CV= config['entrenamiento']['CV']
 
-    gph.variasBoxplot(data, "RMSE", "MeanAE")
+    data= fnc.validacionCruzada(modelos, predictores, target, metricas, CV)
+    print(data)
+    data= fnc.validacionCruzadaMultiModelo(modelos, predictores, target, metricas, CV)
+    print(data)
+    # data= fnc.validacionCruzadaMultiKFold(modelos, predictores, target, metricas, CV)
+    # print(data)
+
+    gph.variasBoxplot(data)
 
 if __name__ == '__main__':
     main()

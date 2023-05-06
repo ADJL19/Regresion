@@ -3,22 +3,42 @@
         "comentario": "En este apartado definimos el fichero del que extraer el dataset. Se indica la extension y ruta del archivo. También el separador para el caso de .csv. Se establece si se desea normalizar o aleatorizar los datos.",
         "extension": ".csv",
         "fichero": "C:/Users/adzl/Desktop/BI/Enerxia/MiniEolica/Datos/dataset",
-        "separador": ",",
+        "separador": ","
+    },
+
+    "preprocesamiento":{
         "aleatorizar": true,
-        "normalizar": true
+        "normalizar": true,
+        "variablesEspurias": [
+            "Time", 
+            "Energy", 
+            "V",
+            "I", 
+            "W", 
+            "VAr", 
+            "Wh_e"
+        ],
+        "variablesExplicativas": [
+            "Wind_V", 
+            "Wind_V_10m", 
+            "SD_Wind_V_10m", 
+            "SD_Wind_D_10m"
+        ],
+        "reduccion":{
+            "PCA": false,
+            "ICA": false
+        },
+        "PCA":{
+            "n_components": 4
+        },
+        "ICA":{
+            "n_components": 4
+        }
     },
 
-    "reduccion":{
-        "PCA": false,
-        "ICA": false
-    },
-
-    "PCA":{
-        "n_components": 4
-    },
-
-    "ICA":{
-        "n_components": 4
+    "representacion":{
+        "MatrizCorrelacion": false,
+        "ScatterMatrix": false
     },
 
     "modelos":{
@@ -32,8 +52,8 @@
 
     "RLS":{
         "fit_intercept": [
-            true,
-            false
+            false,
+            true
         ],
 
         "positive": [
@@ -136,6 +156,7 @@
             "R2",
             "varianzaExplicada"
         ],
+        "CV": 10,
         "kfolds": 10,
         "epochs": 10,
         "batch_size": 32

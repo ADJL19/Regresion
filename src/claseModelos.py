@@ -4,11 +4,10 @@ from sklearn.model_selection import cross_validate
 
 class model():
     #Inicialización de la clase. Por defecto, se establece un modelo de regresión lineal.
-    def __init__(self, modelo= LinearRegression(), CV= 10):
+    def __init__(self, modelo= LinearRegression()):
         self.__modelo = modelo
         self.__prediccion = []
         self.__scores = []
-        self.__CV = CV
 
     #Propiedad para obtener el valor de los parámetros del modelo
     @property
@@ -38,8 +37,3 @@ class model():
     @property
     def scores(self):
         return self.__scores
-
-    #Propiedad para obtener, en cualquier momento, el valor del KFold.
-    @property
-    def CV(self):
-        return self.__CV
