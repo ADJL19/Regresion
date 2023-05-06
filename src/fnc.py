@@ -136,8 +136,6 @@ def validacionCruzadaModelo(nombre, tecnica, predictores, target, metricas, kf):
     for i, (train_index, test_index) in enumerate(kf.split(predictores, target)):
         v= validacionCruzadaKFold(nombre, tecnica, predictores, target, metricas, train_index, test_index, i)
         DF= pd.concat([DF, v], axis= 0, join= 'inner', ignore_index= True)
-    
-    DF[DF.columns[:-1]]= DF[DF.columns[:-1]].astype('float')
     return DF
 
 def validacionCruzadaKFold(nombre, tecnica, predictores, target, metricas, train_index, test_index, i):
@@ -150,20 +148,15 @@ def validacionCruzadaKFold(nombre, tecnica, predictores, target, metricas, train
 
     v = np.append(error.calculo(metricas, t_test, prediccion), [i])
     DF.loc[0]= np.append(v, [nombre])
+    DF[DF.columns[:-1]]= DF[DF.columns[:-1]].astype('float')
     return DF
 
 class MiHilo(Thread):
-    def __init__(self, nombre, tecnica, predictores, target, metricas, kf, **kwargs):
-        super().__init__(**kwargs)
-        self.nombre = nombre
-        self.tecnica = tecnica
-        self.predictores = predictores
-        self.target = target
-        self.metricas = metricas
-        self.kf = kf
+    def __init__(self, target, args):
+        super().__init__(target= target, args= args)
 
     def run(self):
-        self.result= validacionCruzadaModelo(self.nombre, self.tecnica, self.predictores, self.target, self.metricas, self.kf)
+        self.result= self._target(*self._args)
 
     def result(self):
         return self.result
@@ -176,7 +169,7 @@ def validacionCruzadaMultiModelo(modelos, predictores, target, metricas, CV):
     DF= crearDF(metricas)
 
     for nombre, tecnica in modelos.items():
-        hilo = MiHilo(nombre, tecnica, predictores, target, metricas, kf)
+        hilo = MiHilo(target= validacionCruzadaModelo, args=(nombre, tecnica, predictores, target, metricas, kf))
         hilo.start()
         hilos.append(hilo)
     for hilo in hilos:
@@ -184,22 +177,22 @@ def validacionCruzadaMultiModelo(modelos, predictores, target, metricas, CV):
     for hilo in hilos:
         df = hilo.result
         DF = pd.concat([DF, df], axis=0, join= 'inner')
-    return DF
+    return pd.concat([DF], ignore_index= True)
 
-# def validacionCruzadaMultiKFold(modelos, predictores, target, metricas, CV):
-#     hilos = []
-#     DF= crearDF(metricas)
+def validacionCruzadaMultiKFold(modelos, predictores, target, metricas, CV):
+    hilos = []
+    DF= crearDF(metricas)
 
-#     kf = KFold(n_splits= CV)
-#     for nombre, tecnica in modelos.items():
-#         for i, (train_index, test_index) in enumerate(kf.split(predictores, target)):
-#             hilo = MiHilo(nombre, tecnica, predictores, target, metricas, train_index, test_index, i)
-#             hilo.start()
-#             hilos.append(hilo)
+    kf = KFold(n_splits= CV)
+    for nombre, tecnica in modelos.items():
+        for i, (train_index, test_index) in enumerate(kf.split(predictores, target)):
+            hilo = MiHilo(target= validacionCruzadaKFold, args= (nombre, tecnica, predictores, target, metricas, train_index, test_index, i))
+            hilo.start()
+            hilos.append(hilo)
+    for hilo in hilos:
+        hilo.join()
+    for hilo in hilos:
+        df = hilo.result
+        DF = pd.concat([DF, df], axis=0, join= 'inner')
 
-#     for hilo in hilos:
-#         hilo.join()
-
-#     for hilo in hilos:
-#         df = hilo.result
-#         DF = pd.concat([DF, df], axis=0, join= 'inner')
+    return pd.concat([DF], ignore_index= True)
