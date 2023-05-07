@@ -19,7 +19,7 @@ def crearRLS(modelos, config, *t):
 def crearKNN(modelos, config, *t):
     for nn in config["vecinos"]:
         for w in config["pesos"]:
-            modelos["RLS"+str(nn)+str(w)]= model(KNeighborsRegressor(n_neighbors=nn, weights=w))
+            modelos["KNN"+str(nn)+str(w)]= model(KNeighborsRegressor(n_neighbors=nn, weights=w))
     return modelos
 
 def crearDT(modelos, config, *t):

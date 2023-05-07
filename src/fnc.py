@@ -4,7 +4,9 @@ import pandas as pd
 
 import gph
 import metricaserror as error
+
 from threading import Thread
+from multiprocessing import Process
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA, FastICA
@@ -79,6 +81,16 @@ def vReduccion(model, data):
     variables = data.columns
     return [variables[mejorExplicacion[comp]] for comp in range(nComp)]
 
+def exportacionExcel(settings, DF, modelos):
+    for modelo, tf in settings["modelos"].items():
+        if tf:
+            archivo = settings["exportacion"]["ruta"] + '/' + modelo + '.xlsx'
+            writer = pd.ExcelWriter(archivo)
+            for nombre, tecnica in modelos.items(): 
+                if modelo in nombre:
+                    DF[DF.Tecnica== nombre].to_excel(writer, sheet_name= nombre, index= True)
+            writer.close()
+
 def crearDF(metricas):
     col = metricas.copy()
     col.append('Iteracion')
@@ -152,6 +164,32 @@ def validacionCruzadaKFold(nombre, tecnica, predictores, target, metricas, train
     return DF
 
 class MiHilo(Thread):
+    """Clase creada mediante la herencia de Thread. Se le añade una propiedad para acceder al resultado del hilo.
+    
+    Parámetros:
+    ----------
+    target : Función
+        Función que se implementará en un hilo.
+
+    args : Tupla
+        Argumentos de la función objetivo
+
+    Devuelve:
+    ----------
+    result : 
+        Resultado de la función target
+    """
+    def __init__(self, target, args):
+        super().__init__(target= target, args= args)
+
+    def run(self):
+        self._result= self._target(*self._args)
+
+    @property
+    def result(self):
+        return self._result
+    
+class MiProceso(Process):
     def __init__(self, target, args):
         super().__init__(target= target, args= args)
 

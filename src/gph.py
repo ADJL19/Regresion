@@ -54,7 +54,8 @@ def boxplot(data, metrica):
 
 def variasBoxplot(data, *metricas):
     for metrica in metricas:
-        boxplot(data, metrica)
+        for m in metrica:
+            boxplot(data, m)
 
 
 #Función encargada de dibujar un gráfico de dispersión
@@ -72,4 +73,5 @@ def scatter(data, metrica):
 
 def variasScatter(data, *metricas):
     for metrica in metricas:
-        scatter(data, metrica)
+        for m in metrica:
+            scatter(data, m)

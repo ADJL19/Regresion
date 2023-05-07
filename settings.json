@@ -43,7 +43,7 @@
 
     "modelos":{
         "RLS": true,
-        "KNN": false,
+        "KNN": true,
         "DT": false,
         "RF": false,
         "SVR": false,
@@ -156,9 +156,18 @@
             "R2",
             "varianzaExplicada"
         ],
+        "comparacion": [
+            
+         ],
         "CV": 10,
         "kfolds": 10,
         "epochs": 10,
         "batch_size": 32
+    },
+
+    "exportacion": {
+        "ruta": "./info/metricas",
+        "excel": true,
+        "csv": false
     }
 }
