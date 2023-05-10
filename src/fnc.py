@@ -53,6 +53,7 @@ def importacionDatos(config):
     #Se eliminan del DF las variables no útiles.
     data = data.drop(columns= config["preprocesamiento"]["variablesEspurias"])
 
+    #
     if config["representacion"]["MatrizCorrelacion"]: gph.matrizCorrelacion(pd.concat([data, target], axis=1, join="inner"))
 
     #Se normalizan los datos si así de indica.
@@ -232,6 +233,7 @@ def validacionCruzadaMultiKFold(modelos, predictores, target, metricas, CV):
         hilo.join()
     for hilo in hilos:
         df = hilo.result
+        print(df)
         DF = pd.concat([DF, df], axis=0, join= 'inner')
 
     return pd.concat([DF], ignore_index= True)

@@ -35,7 +35,7 @@ def crearRF(modelos, config, *t):
     for c in config["criterion"]:
         for md in config["max_depth"]:
             for a in config["arboles"]:
-                modelos["RF"+str(c)+str(md)+str(a)]= model(RandomForestRegressor(criterion= c, max_depth= md, n_estimators= a))
+                modelos["RF"+str(c)+str(md)+str(a)]= model(RandomForestRegressor(criterion= c, max_depth= md, n_estimators= a, n_jobs= -1))
     return modelos
 
 def crearSVR(modelos, config, *t):

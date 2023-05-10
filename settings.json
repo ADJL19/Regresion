@@ -37,14 +37,14 @@
     },
 
     "representacion":{
-        "MatrizCorrelacion": false,
-        "ScatterMatrix": false
+        "MatrizCorrelacion": true,
+        "ScatterMatrix": true
     },
 
     "modelos":{
         "RLS": true,
-        "KNN": true,
-        "DT": true,
+        "KNN": false,
+        "DT": false,
         "RF": false,
         "SVR": false,
         "MLP": false,
@@ -114,8 +114,10 @@
 
     "SVR":{
         "C": [
+            500,
             100,
-            10
+            10,
+            1
         ],
 
         "kernel": [

@@ -19,7 +19,7 @@ def matrizCorrelacion(data):
     etiquetas= data.columns
     sns.heatmap(n, vmin=-1, vmax=1, linewidths=1, cmap= 'BrBG',
                 xticklabels=etiquetas, yticklabels=etiquetas, annot= True)
-    plt.xticks(rotation= 90)
+    plt.xticks(rotation= 45)
     plt.show()
 
     d = pd.DataFrame(n, index= etiquetas, columns= etiquetas)
@@ -36,6 +36,8 @@ def representarDatos(data):
     """
     sns.set_theme(style="ticks")
     sns.pairplot(data)
+    plt.xticks(rotation= 45)
+    plt.yticks(rotation= 45)
     plt.show()
 
 
