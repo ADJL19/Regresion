@@ -55,3 +55,22 @@ def KHojas(modelos, predictores, target):
         kf = KFold(n_splits=tecnica.CV)   
         for train, test in kf.split(predictores):
             tecnica.entrenarModelo(predictores[train], target[test])
+
+
+# d1= pd.read_excel("C:/Users/adzl/Documents/GitHub/MiniEolica/info/metricas/SVR.xlsx", sheet_name= "SVR100rbf")
+# d2= pd.read_excel("C:/Users/adzl/Documents/GitHub/MiniEolica/info/metricas/BR.xlsx", sheet_name="BR1000000000100000000010000000001000000000")
+# d3= pd.read_excel("C:/Users/adzl/Documents/GitHub/MiniEolica/info/metricas/PN.xlsx", sheet_name= "PN4True")
+# d4= pd.read_excel("C:/Users/adzl/Documents/GitHub/MiniEolica/info/metricas/NN/TANH/NN11.xlsx")
+
+# import numpy as np
+# d4.RMSE= np.sqrt(d4.MSE)
+# print(np.mean(d1.RMSE))
+# print(np.mean(d2.RMSE))
+# print(np.mean(d3.RMSE))
+# print(np.mean(d4.RMSE))
+
+# data= pd.concat([d3, d2, d1, d4], axis= 0, ignore_index= True)
+# data.Tecnica[0:10] = "PR"
+# data.Tecnica[10:20] = "BR"
+# data.Tecnica[20:30] = "SVR"
+# data.Tecnica[30:40] = "MLP"

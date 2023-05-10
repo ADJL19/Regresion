@@ -2,7 +2,10 @@
 
 from claseModelos import model
 
-from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.pipeline import make_pipeline
+
+from sklearn.linear_model import LinearRegression, BayesianRidge
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
@@ -23,7 +26,6 @@ def crearKNN(modelos, config, *t):
     return modelos
 
 def crearDT(modelos, config, *t):
-    print(modelos)
     for c in config["criterion"]:
         for md in config["max_depth"]:
             modelos["DT"+str(c)+str(md)]= model(DecisionTreeRegressor(criterion= c, max_depth= md))
@@ -46,6 +48,20 @@ def crearMLP(modelos, config, tamPredictores):
     for fa in config["funcion_activacion"]:
         for no in config["neuronas_ocultas"]:
             modelos["MLP"+str(fa)+str(no)]= crearNN(tamPredictores, NO= no, FA= fa)
+    return modelos
+
+def crearPN(modelos, config, *t):
+    for d in config["grado"]:
+        for b in config["bias"]:
+            modelos["PN"+str(d)+str(b)]= model(make_pipeline(PolynomialFeatures(degree= d, include_bias= b), LinearRegression(fit_intercept= False)))
+    return modelos
+
+def crearBR(modelos, config, *t):
+    for a1 in config["alpha1"]:
+        for a2 in config["alpha2"]:
+            for l1 in config["lambda1"]:
+                for l2 in config["lambda2"]:
+                    modelos["BR"+str(a1)+str(a2)+str(l1)+str(l2)]= model(BayesianRidge(alpha_1=a1, alpha_2=a2, lambda_1= l1, lambda_2= l2))
     return modelos
 
 def definirModelos(config, tamPredictores= 1):

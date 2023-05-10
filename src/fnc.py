@@ -1,4 +1,5 @@
 #Importación de las librerías empleadas
+import os
 import numpy as np
 import pandas as pd
 
@@ -84,12 +85,13 @@ def vReduccion(model, data):
 def exportacionExcel(settings, DF, modelos):
     for modelo, tf in settings["modelos"].items():
         if tf:
-            archivo = settings["exportacion"]["ruta"] + '/' + modelo + '.xlsx'
+            archivo = settings["exportacion"]["ruta"] + os.sep + modelo + '.xlsx'
             writer = pd.ExcelWriter(archivo)
-            for nombre, tecnica in modelos.items(): 
+            for nombre in modelos.keys(): 
                 if modelo in nombre:
                     DF[DF.Tecnica== nombre].to_excel(writer, sheet_name= nombre, index= True)
             writer.close()
+    print("Exportación a .xlsx realizada.")
 
 def crearDF(metricas):
     col = metricas.copy()
@@ -183,11 +185,10 @@ class MiHilo(Thread):
         super().__init__(target= target, args= args)
 
     def run(self):
-        self._result= self._target(*self._args)
+        self.result= self._target(*self._args)
 
-    @property
     def result(self):
-        return self._result
+        return self.result
     
 class MiProceso(Process):
     def __init__(self, target, args):

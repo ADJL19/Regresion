@@ -3,7 +3,6 @@ from sklearn.model_selection import KFold
 import tensorflow as tf
 import pandas as pd
 import numpy as np
-import fnc
 import metricaserror as error
 
 
@@ -30,7 +29,6 @@ def crearNN(n_entradas, NO= [10], FA= 'relu', LR= 0.01, LF= "mean_squared_error"
 #Función encargada de realizar la validación cruzada para la RN.
 def validacionCruzada(nombre, predictores, target, metricas= ["RMSE", "MeanAE"], NO= [10], FA= 'relu', LR= 0.01, LF= "mse"):
     #Establecemos el número de grupos y de iteraciones para la validación cruzada.
-    # K, epochs, batch = 10, 50, 50
     CV, epochs, batch = 10, 50, 50
     n_entradas = np.shape(predictores)[1]
 
@@ -52,8 +50,8 @@ def validacionCruzada(nombre, predictores, target, metricas= ["RMSE", "MeanAE"],
 
         #Predecimos con el modelo entrenado para el cálculo de las métricas
         prediccion = model.predict(X_test)
+
         #Cargamos en el DataFrame el valor de las métricas seleccionadas.
-        # df.loc[i]= error.calculo(list(metricas.keys()), t_test, prediccion)
         df.loc[i]= error.calculo(metricas, t_test, prediccion)
 
     #Devolvemos un DF con el DF de las métricas más dos columnas de iteración y técnica

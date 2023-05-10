@@ -26,17 +26,17 @@ def main():
     CV= settings['entrenamiento']['CV']
 
     # Se realiza la validación cruzada en función del método seleccionado.
-    # t1 = timeit("fnc.validacionCruzada(modelos, predictores, target, metricas, CV)", number= 10, globals=globals())
-    # print(f"PRIMERA VALIDACIÓN HECHA EN {t1/60:.3f}.")
-    # t2= timeit("fnc.validacionCruzadaMultiModelo(modelos, predictores, target, metricas, CV)", number= 10, globals=globals())
-    # print(f"SEGUNDA VALIDACIÓN HECHA EN {t2/60:.3f}.")
-    # t3= timeit("fnc.validacionCruzadaMultiKFold(modelos, predictores, target, metricas, CV)", number= 10, globals=globals())
-    # print(f"TERCERA VALIDACIÓN HECHA EN {t3/60:.3f}.")
+    num= 1
+    t1 = timeit(lambda: fnc.validacionCruzada(modelos, predictores, target, metricas, CV), number= num, globals=globals())
+    print(f"PRIMERA VALIDACIÓN HECHA EN {t1/60:.3f}.")
+    t2= timeit(lambda: fnc.validacionCruzadaMultiModelo(modelos, predictores, target, metricas, CV), number= num, globals=globals())
+    print(f"SEGUNDA VALIDACIÓN HECHA EN {t2/60:.3f}.")
+    t3= timeit(lambda: fnc.validacionCruzadaMultiKFold(modelos, predictores, target, metricas, CV), number= num, globals=globals())
+    print(f"TERCERA VALIDACIÓN HECHA EN {t3/60:.3f}.")
 
-    data= fnc.validacionCruzadaMultiModelo(modelos, predictores, target, metricas, CV)
     if settings["exportacion"]["excel"]: fnc.exportacionExcel(settings, data, modelos)
-
     gph.variasBoxplot(data, settings["entrenamiento"]["comparacion"])
+
 
 if __name__ == '__main__':
     main()

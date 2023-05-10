@@ -1,9 +1,6 @@
-from sklearn import datasets, linear_model
-from sklearn.model_selection import cross_val_predict
-diabetes = datasets.load_diabetes()
-X = diabetes.data[:150]
-y = diabetes.target[:150]
-lasso = linear_model.Lasso()
-y_pred = cross_val_predict(lasso, X, y, cv=5)
-print(y_pred)
-print(y)
+import pandas as pd
+
+d1= pd.read_excel("C:/Users/adzl/Documents/GitHub/MiniEolica/info/metricas/SVR.xlsx", sheet_name= "SVR100rbf")
+d2= pd.read_excel("C:/Users/adzl/Documents/GitHub/MiniEolica/info/metricas/BR.xlsx", sheet_name="BR1000000000100000000010000000001000000000")
+d3= pd.read_excel("C:/Users/adzl/Documents/GitHub/MiniEolica/info/metricas/PN.xlsx", sheet_name= "PN4True")
+d4= pd.read_excel("C:/Users/adzl/Documents/GitHub/MiniEolica/info/metricas/NN/TANH/NN11.xlsx")
