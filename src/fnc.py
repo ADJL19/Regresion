@@ -14,6 +14,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA, FastICA
 from sklearn.model_selection import KFold
 
+import matplotlib.pyplot as plt
+
 def importacionDatos(config):
     """Importa los datos de archivos Excel o CSV.
 
@@ -65,24 +67,36 @@ def importacionDatos(config):
         reduccion= PCA(n_components= config["preprocesamiento"]["PCA"]["n_components"])
         predictores= reduccion.fit_transform(data)
 
-        variablesUsadas= vReduccion(reduccion, data)
+        variablesUsadas= vReduccion(reduccion, data, config["preprocesamiento"])
         predictores = pd.DataFrame(predictores, columns= variablesUsadas)
     elif config["preprocesamiento"]["reduccion"]["ICA"]:
         reduccion= FastICA(n_components= config["preprocesamiento"]["ICA"]["n_components"])
         predictores= reduccion.fit_transform(data)
 
-        variablesUsadas= vReduccion(reduccion, data)
+        variablesUsadas= vReduccion(reduccion, data, config["preprocesamiento"])
         predictores = pd.DataFrame(predictores, columns= variablesUsadas)
     else:
         predictores = data.loc[:, config["preprocesamiento"]["variablesExplicativas"]]
 
     return target, predictores
 
-def vReduccion(model, data):
+def vReduccion(model, data, settings):
     nComp= len(model.components_)
     mejorExplicacion = [np.abs(model.components_[comp]).argmax() for comp in range(nComp)]
     variables = data.columns
-    return [variables[mejorExplicacion[comp]] for comp in range(nComp)]
+    variables = [variables[mejorExplicacion[comp]] for comp in range(nComp)]
+
+    if settings["mostrarReduccion"] and settings["reduccion"]["PCA"]:
+        varianzaExplicada = model.explained_variance_ratio_
+        nDatos = len(variables)
+    
+        plt.bar(range(nDatos), varianzaExplicada, color='b', align='center')
+        plt.xticks(range(nDatos), variables, rotation= 45)
+        plt.xlabel('Componentes principales')
+        plt.ylabel('% de varianza explicada')
+        plt.show()
+
+    return variables
 
 def exportacionExcel(settings, DF, modelos):
     for modelo, tf in settings["modelos"].items():
@@ -94,6 +108,15 @@ def exportacionExcel(settings, DF, modelos):
                     DF[DF.Tecnica== nombre].to_excel(writer, sheet_name= nombre, index= True)
             writer.close()
     print("Exportación a .xlsx realizada.")
+
+def mostrarComparacion(DF):
+    #Se agrupa
+    DF= DF.groupby(['Tecnica']).agg(['mean'])
+    for t in DF.index:
+        print(f"Para el modelo {t}")
+        for c in DF.columns:
+            print(f"El valor medio de {c} es: {DF.loc[t, c]}")
+        print("")
 
 def crearDF(metricas):
     col = metricas.copy()
@@ -206,8 +229,7 @@ class MiProceso(Process):
         return self.result
 
 def validacionCruzadaMultiModelo(modelos, predictores, target, metricas, CV):
-    """Realiza la validación cruzada multihilo para cada modelo. De esta manera, en cada hilo se realiza toda la validación cruzada de un modelo.
-    """
+    """Realiza la validación cruzada multihilo para cada modelo. De esta manera, en cada hilo se realiza toda la validación cruzada de un modelo."""
     hilos = []
     kf= KFold(n_splits= CV)
     DF= crearDF(metricas)
@@ -224,6 +246,7 @@ def validacionCruzadaMultiModelo(modelos, predictores, target, metricas, CV):
     return pd.concat([DF], ignore_index= True)
 
 def validacionCruzadaMultiKFold(modelos, predictores, target, metricas, CV):
+    """Realiza la validación cruzada multihilo para cada KFold. De esta manera, en cada hilo se realiza un solo entrenamiento, predicción y evaluación"""
     hilos = []
     DF= crearDF(metricas)
 
@@ -237,7 +260,6 @@ def validacionCruzadaMultiKFold(modelos, predictores, target, metricas, CV):
         hilo.join()
     for hilo in hilos:
         df = hilo.result
-        print(df)
         DF = pd.concat([DF, df], axis=0, join= 'inner')
 
     return pd.concat([DF], ignore_index= True)

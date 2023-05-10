@@ -47,7 +47,7 @@ def crearSVR(modelos, config, *t):
 def crearMLP(modelos, config, tamPredictores):
     for fa in config["funcion_activacion"]:
         for no in config["neuronas_ocultas"]:
-            modelos["MLP"+str(fa)+str(no)]= crearNN(tamPredictores, NO= no, FA= fa)
+            modelos["MLP"+str(fa)+str(no[0])]= crearNN(tamPredictores, NO= no, FA= fa)
     return modelos
 
 def crearPN(modelos, config, *t):

@@ -28,21 +28,22 @@
             "PCA": false,
             "ICA": false
         },
+        "mostrarReduccion": false,
         "PCA":{
-            "n_components": 4
+            "n_components": 5
         },
         "ICA":{
-            "n_components": 4
+            "n_components": 5
         }
     },
 
     "representacion":{
         "MatrizCorrelacion": false,
-        "ScatterMatrix": false
+        "ScatterMatrix": true
     },
 
     "modelos":{
-        "RLS": true,
+        "RLS": false,
         "KNN": false,
         "DT": false,
         "RF": false,
@@ -69,9 +70,7 @@
             2,
             5,
             10,
-            15,
-            30,
-            50
+            15
         ],
 
         "pesos": [
@@ -188,6 +187,10 @@
             "R2",
             "varianzaExplicada"
         ],
+        "mostrar": {
+            "texto": false,
+            "grafica": false
+        },
         "comparacion": [
             "RMSE",
             "MSE",
