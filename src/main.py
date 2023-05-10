@@ -25,6 +25,8 @@ def main():
     metricas= settings['entrenamiento']['metrics']
     CV= settings['entrenamiento']['CV']
 
+    fnc.validacionCruzada(modelos, predictores, target, metricas, CV)
+
     # # Se realiza la validación cruzada en función del método seleccionado.
     # num= 10
     # t1 = timeit(lambda: fnc.validacionCruzada(modelos, predictores, target, metricas, CV), number= num, globals=globals())

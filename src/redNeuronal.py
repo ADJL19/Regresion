@@ -27,35 +27,11 @@ def crearNN(n_entradas, NO= [10], FA= 'relu', LR= 0.01, LF= "mean_squared_error"
     return modelo
 
 #Función encargada de realizar la validación cruzada para la RN.
-def validacionCruzada(nombre, predictores, target, metricas= ["RMSE", "MeanAE"], NO= [10], FA= 'relu', LR= 0.01, LF= "mse"):
+def entrenar(model, X_train, t_train, X_test):
     #Establecemos el número de grupos y de iteraciones para la validación cruzada.
-    CV, epochs, batch = 10, 50, 50
-    n_entradas = np.shape(predictores)[1]
+    epochs, batch = 50, 50
 
-    #Realizamos la subdivisón de los datos en K grupos.
-    kf = KFold(n_splits= CV)
+    #Entrenamos el modelo de la red neuronal.
+    model.fit(X_train, t_train, epochs=epochs, batch_size=batch, verbose= 0)
 
-    #Creamos un DataFrame con las columnas de las métricas y otro con la técnica y la iteración.
-    df = pd.DataFrame(columns= metricas)
-    for i, (train_index, test_index) in enumerate(kf.split(predictores, target)):
-        #Dividimos los datos de entrada y salida de la RN, tanto para el entrenamiento como para el test.
-        X_train, t_train = predictores.iloc[train_index, :], target.iloc[train_index]
-        X_test, t_test = predictores.iloc[test_index, :], target.iloc[test_index]
-
-        #Recargamos el modelo para resetear el valor de los pesos.
-        model = crearNN(n_entradas= n_entradas, metricas= ["mae"], NO= NO, FA= FA, LR= LR, LF= LF)  
-
-        #Entrenamos el modelo de la red neuronal.
-        model.fit(X_train, t_train, epochs=epochs, batch_size=batch, verbose= 0)
-
-        #Predecimos con el modelo entrenado para el cálculo de las métricas
-        prediccion = model.predict(X_test)
-
-        #Cargamos en el DataFrame el valor de las métricas seleccionadas.
-        df.loc[i]= error.calculo(metricas, t_test, prediccion)
-
-    #Devolvemos un DF con el DF de las métricas más dos columnas de iteración y técnica
-    iteracion= [[x+1] for x in range(CV)]
-    tecnica= [[nombre] for x in range(CV)]
-    df2 = pd.DataFrame(np.hstack([iteracion, tecnica]), columns= ['Iteracion', 'Tecnica'])
-    return pd.concat([df, df2], axis= 1, join= "inner")
+    return model.predict(X_test)

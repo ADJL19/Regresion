@@ -5,6 +5,7 @@ import pandas as pd
 
 import gph
 import metricaserror as error
+import redNeuronal
 
 from threading import Thread
 from multiprocessing import Process
@@ -158,8 +159,11 @@ def validacionCruzadaKFold(nombre, tecnica, predictores, target, metricas, train
     X_train, t_train = predictores.iloc[train_index, :], target.iloc[train_index]
     X_test, t_test = predictores.iloc[test_index, :], target.iloc[test_index]
     
-    tecnica.entrenar(X_train, t_train)
-    prediccion = tecnica.predecir(X_test)
+    if "MLP" in nombre:
+        prediccion= redNeuronal.entrenar(tecnica, X_train, t_train, X_test)
+    else:
+        tecnica.entrenar(X_train, t_train)
+        prediccion = tecnica.predecir(X_test)
 
     v = np.append(error.calculo(metricas, t_test, prediccion), [i])
     DF.loc[0]= np.append(v, [nombre])

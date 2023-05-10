@@ -72,9 +72,6 @@ def definirModelos(config, tamPredictores= 1):
 
     for modelo, tf in config["modelos"].items():
         if tf:
-            if modelo == "MLP":
-                modelos= tecnicas['crear' + modelo](modelos, config[modelo])
-            else:
-                modelos= tecnicas['crear' + modelo](modelos, config[modelo], tamPredictores)
+            modelos= tecnicas['crear' + modelo](modelos, config[modelo], tamPredictores)
 
     return modelos

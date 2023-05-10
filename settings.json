@@ -37,8 +37,8 @@
     },
 
     "representacion":{
-        "MatrizCorrelacion": true,
-        "ScatterMatrix": true
+        "MatrizCorrelacion": false,
+        "ScatterMatrix": false
     },
 
     "modelos":{
@@ -130,12 +130,7 @@
 
     "MLP":{
         "neuronas_ocultas": [
-            [1],
-            [3],
-            [5],
-            [10],
-            [15],
-            [20]
+            [1]
         ],
 
         "funcion_activacion": [
