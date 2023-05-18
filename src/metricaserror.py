@@ -105,6 +105,3 @@ def calculo(metricas, target, prediccion):
         valor.append(funciones[metrica](target, prediccion))
 
     return np.array(valor)
-
-if __name__ == '__main__':
-    print(calculo(["SMAPE", "MeanAE", "RMSE"], np.array([5]), np.array([2])))

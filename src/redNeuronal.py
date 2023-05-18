@@ -1,9 +1,5 @@
 #Importación de las librerías empleadas
-from sklearn.model_selection import KFold
 import tensorflow as tf
-import pandas as pd
-import numpy as np
-import metricaserror as error
 
 
 #Función encargada de la creación de una red neunoral feedforward.
