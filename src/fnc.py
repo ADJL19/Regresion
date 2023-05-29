@@ -33,15 +33,11 @@ def importacionDatos(config):
     archivo= {'.csv': pd.read_csv, '.xlsx': pd.read_excel}
     path= config['fichero_datos']['fichero'] + config['fichero_datos']['extension']
 
-    #Leemos el archivo donde se almacenan los datos
-    data = archivo[config['fichero_datos']['extension']](path, sep= config['fichero_datos']['separador'])
+    #Leemos el archivo donde se almacenan los datos.
+    data = archivo[config['fichero_datos']['extension']](path, sheet_name= "analisis")#, sep= config['fichero_datos']['separador'])
 
-    # #Eliminamos los datos espurios
-    # data = data[data['Enerxia'] > 0]
-    # data = data[data['Enerxia'] < 1500]
-    # data = data[data['Velocidade'] < 14]
-    # data = data[data['I'] > 0]
-    # data = data[data['Velocidade'] > 3.5]
+    #Realizamos una descripción básica del dataset.
+    if config["representacion"]["resumen"]: print(data.describe())
 
     #Realizamos el reseteo del DF para obtener sus índices ordenados desde 0 hasta N,
     #en lugar de desde 0 hasta el máximo original, pero con tan solo N índices.

@@ -27,14 +27,14 @@ def main():
 
     data= fnc.validacionCruzada(modelos, predictores, target, metricas, CV)
 
-    # Se realiza la validación cruzada en función del método seleccionado.
-    num= 10
-    t1 = timeit(lambda: fnc.validacionCruzada(modelos, predictores, target, metricas, CV), number= num, globals=globals())
-    print(f"Ejecución simple realizada en: {t1/60:.5f} minutos.")
-    t2= timeit(lambda: fnc.validacionCruzadaMultiModelo(modelos, predictores, target, metricas, CV), number= num, globals=globals())
-    print(f"Ejecución con un modelo por hilo realizada en: {t2/60:.5f} minutos.")
-    t3= timeit(lambda: fnc.validacionCruzadaMultiKFold(modelos, predictores, target, metricas, CV), number= num, globals=globals())
-    print(f"Ejecución con un entrenamiento/predicción por hilo realizada en: {t3/60:.5f}.")
+    # # Se realiza la validación cruzada en función del método seleccionado.
+    # num= 10
+    # t1 = timeit(lambda: fnc.validacionCruzada(modelos, predictores, target, metricas, CV), number= num, globals=globals())
+    # print(f"Ejecución simple realizada en: {t1/60:.5f} minutos.")
+    # t2= timeit(lambda: fnc.validacionCruzadaMultiModelo(modelos, predictores, target, metricas, CV), number= num, globals=globals())
+    # print(f"Ejecución con un modelo por hilo realizada en: {t2/60:.5f} minutos.")
+    # t3= timeit(lambda: fnc.validacionCruzadaMultiKFold(modelos, predictores, target, metricas, CV), number= num, globals=globals())
+    # print(f"Ejecución con un entrenamiento/predicción por hilo realizada en: {t3/60:.5f}.")
 
     if settings["entrenamiento"]["mostrar"]["texto"]: fnc.mostrarComparacion(data, settings["entrenamiento"]["comparacion"])
     if settings["entrenamiento"]["mostrar"]["grafica"]: gph.variasBoxplot(data, settings["entrenamiento"]["comparacion"])

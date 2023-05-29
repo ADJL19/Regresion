@@ -1,22 +1,15 @@
 {
     "fichero_datos":{
         "comentario": "En este apartado definimos el fichero del que extraer el dataset. Se indica la extension y ruta del archivo. También el separador para el caso de .csv. Se establece si se desea normalizar o aleatorizar los datos.",
-        "extension": ".csv",
-        "fichero": "C:/Users/adzl/Desktop/BI/Enerxia/MiniEolica/Datos/dataset",
+        "extension": ".xlsx",
+        "fichero": "C:/Users/adzl/Desktop/TFM/00_Data/ABARAN/ABARAN_jul22",
         "separador": ","
     },
 
     "preprocesamiento":{
-        "aleatorizar": true,
-        "normalizar": true,
+        "aleatorizar": false,
+        "normalizar": false,
         "variablesEspurias": [
-            "Time", 
-            "Energy", 
-            "V",
-            "I", 
-            "W", 
-            "VAr", 
-            "Wh_e"
         ],
         "variablesExplicativas": [
             "Wind_V", 
@@ -38,7 +31,8 @@
     },
 
     "representacion":{
-        "MatrizCorrelacion": false,
+        "resumen": true,
+        "MatrizCorrelacion": true,
         "ScatterMatrix": true
     },
 
@@ -203,7 +197,7 @@
     },
 
     "exportacion": {
-        "ruta": "./info/metricas",
+        "ruta": "C:/Users/adzl/Desktop/TFM/03_Resultados",
         "excel": false,
         "csv": false
     }
